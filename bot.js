@@ -28,7 +28,7 @@ bot.on("ready", () => {
 	bot.user.setAvatar(config.avatar_url).catch(() => {
 		console.log("Avatar not set due to rate limits.");
 	});
-	
+
 	db.ref("members").once("value", snapshot => {
 		memberNameList = snapshot.val();
 	});
@@ -39,7 +39,7 @@ bot.on("ready", () => {
 
 /**
  * Returns the time in a friendly format
- * 
+ *
  * @returns {string} Date in M/DD h:mm a format
  */
 function getTime() {
@@ -48,7 +48,7 @@ function getTime() {
 
 /**
  * Sends text to the default debug channel, if it exists
- * 
+ *
  * @param {string} text
  * @returns {?Promise} Sending the message resolves with success or failure
  */
@@ -62,8 +62,8 @@ function debug(text) {
 
 /**
  * Checks whether the author of the message is the bot creator, as defined in the config
- * 
- * @param {Message} message 
+ *
+ * @param {Message} message
  * @returns {boolean}
  */
 function isAuthorBotCreator(message) {
@@ -72,7 +72,7 @@ function isAuthorBotCreator(message) {
 
 /**
  * Checks whether the author of the message has the admin role or is the bot creator
- * 
+ *
  * @param {Message} message
  * @returns {boolean}
  */
@@ -83,7 +83,7 @@ function isAuthorAdmin(message) {
 
 /**
  * Returns the display name or nickname of the message's author
- * 
+ *
  * @param {Message} message
  * @returns {string} The author's display name, or if not available, the author's nickname
  */
@@ -97,7 +97,7 @@ function getAuthorNickname(message) {
 
 /**
  * Returns the member with the specified display name in the message's server
- * 
+ *
  * @param {Guild} server - the Discord server
  * @param {string} displayName - Case-insensitive string
  * @returns {?GuildMember} The member with the display name
@@ -109,7 +109,7 @@ function getMember(server, displayName) {
 
 /**
  * Returns the appropriate command (or null) from specified message content
- * 
+ *
  * @param {string} messageContent
  * @returns {?Object} The found command
  */
@@ -145,14 +145,18 @@ bot.on("message", message => {
 
 		} else {
 			const messageWords = message.cleanContent.toLowerCase().split(" ");
-			
+
 			if(["hello", "hi", "hey", "hola", "bonjour"].some(greeting => messageWords.includes(greeting))) {
-				message.channel.send(`hi ${getAuthorNickname(message)}`);
-			} else if(message.content.includes("?") && Math.random() < 0.1) { // 10% chance
-				message.channel.send("don't worry about it");
-			} else if(Math.random() < 0.01) {
+				message.channel.send(`Hi ${getAuthorNickname(message)}`);
+			} else if(message.content.includes("?")) {
+				if(Math.random() < 0.02) { // 2% chance
+					message.channel.send("Don't worry about it");
+				}
+			} else if((/^[a-zÀ-ÿ-]+ is [a-zÀ-ÿ-]+.?$/).test(message.cleanContent.toLowerCase()) && !["who", "what", "where", "when", "how", "why"].some(questionWord => messageWords.includes(questionWord))) {
+				message.channel.send("It is known.");
+			} else if(Math.random() < 0.005) {
 				message.channel.send("Allegedly");
-			} else if(Math.random() < 0.01) { // Mocking spongebob meme
+			} else if(Math.random() < 0.005) { // Mocking spongebob meme
 				// Alternates the case of the message's content
 				const chars = message.cleanContent.toLowerCase().split("");
 				for(let i = 0; i < chars.length; i += (Math.random() < 0.2) ? 1 : 2) {
@@ -324,7 +328,7 @@ const commands = [
 				message.channel.send("Number of messages to purge was not specified. No messages will be cleared.");
 				return;
 			}
-			
+
 			const contentAsNumber = parseInt(args, 10);
 
 			if(!isNaN(contentAsNumber) && contentAsNumber > 0 && contentAsNumber < 101) { // parameter is valid
@@ -361,7 +365,7 @@ const commands = [
 		exampleUsage: "log",
 		execute: function(message, content) {
 			if(content) { // argument is specified
-				if((/^[A-Za-z]+ [A-Za-z]+.*$/).test(content)) { // matches name pattern
+				if((/^[A-zÀ-ÿ-]+ [A-zÀ-ÿ-]+.*$/).test(content)) { // argument is a name
 					const user = signinHelper.doesUserExist(memberNameList, content);
 					if(user) { // user exists
 						if(isAuthorAdmin(message)) { // admin, so send full data
@@ -370,9 +374,9 @@ const commands = [
 							signinHelper.sendUserLog(db, message, user.name, user.data.board, false);
 						}
 					} else { // user does not exist
-						message.channel.send(`Sorry, I can't find "**${content}**" in the database. If ${content} **is** a member, talk to <@!${BOT_CREATOR_USER_ID}> and he'll add it to the sign in.`);
+						message.channel.send(`Sorry, I can't find "**${content}**" in the database. If ${content} **is** a member, talk to <@!${BOT_CREATOR_USER_ID}> and they'll add it to the sign in.`);
 					}
-				} else { // does not match name pattern
+				} else { // argument is not a name
 					message.channel.send(`"${content}" should be a full name properly spelled.`);
 				}
 			} else { // no argument, default to user's own name
@@ -380,7 +384,7 @@ const commands = [
 				if(user) { // user is in the database
 					signinHelper.sendUserLog(db, message, user.name, user.isBoardMember, "in direct message");
 				} else { // not in the database, could be from another team
-					message.channel.send(`Sorry, I don't know your full name, ${getAuthorNickname(message)}. If you **are** a club member, you should be in the database, so talk to <@!${BOT_CREATOR_USER_ID}> and he'll add you to the sign in.`);
+					message.channel.send(`Sorry, I don't know your full name, ${getAuthorNickname(message)}. If you **are** a club member, you should be in the database, so talk to <@!${BOT_CREATOR_USER_ID}> and they'll add you to the sign in.`);
 				}
 			}
 		}
@@ -396,7 +400,7 @@ const commands = [
 				message.channel.send("You need to specify a team number (1-6771).");
 				return;
 			}
-			
+
 			if(+content > 0 && +content < 6771) { // parameter is valid
 				// send a request to TheBlueAlliance's API for team information
 				request({
