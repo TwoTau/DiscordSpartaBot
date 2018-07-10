@@ -1,18 +1,36 @@
 {
-    "discord_token": "PUT_DISCORD_TOKEN_HERE",
-    "tba_auth_key": "PUT_THE_BLUE_ALLIANCE_AUTH_KEY_HERE",
-    "firebase_db_url": "PUT_URL_FOR_FIREBASE_SIGN_IN",
+    "discord_token": "DISCORD TOKEN",
+    "tba_auth_key": "THE BLUE ALLIANCE API KEY",
+	"youtube_api_key": "YOUTUBE API KEY",
+    "firebase_db_url": "FIREBASE DATABASE URL",
+	"hours_log_webhook_url": "DISCORD WEBHOOK URL",
     "github_repo": "twotau/DiscordSpartaBot",
-    "allow_eval_command": true,
+	"allow_eval_command": true,
+	"enable_log_command": true,
+	"restrict_purge_to_bot_creator": false,
+	"automated_open_door_message_text": "This is an automated message. If the door to the school is locked, call the robotics room number at **000-000-0000** to get someone to open it.",
     "prefix": "!",
-    "debug_channel_id": "A_DISCORD_CHANNEL_ID_AS_A_STRING",
-    "bot_creator_user_id": "A_DISCORD_USER_ID_AS_A_STRING",
+	"audio_playback_passes": 3,
+    "debug_channel_id": "CHANNEL ID",
+    "bot_creator_user_id": "USER ID",
     "toggleable_roles": {
-        "NAME_OF_ROLE": "A_DISCORD_ROLE_ID_AS_A_STRING",
-        "NAME_OF_ROLE": "A_DISCORD_ROLE_ID_AS_A_STRING",
-        "NAME_OF_ROLE": "A_DISCORD_ROLE_ID_AS_A_STRING"
+        "SHORT ARGUMENT NAME 1": "ROLE ID",
+        "SHORT ARGUMENT NAME 2": "ROLE ID",
+        "SHORT ARGUMENT NAME 3": "ROLE ID"
     },
-	"new_member_role": "A_DISCORD_ROLE_ID_AS_A_STRING",
-    "admin_role": "NAME_OF_DISCORD_ROLE",
-    "avatar_url": "PATH_TO_LOCAL_IMAGE_FILE"
+	"automated_message_delete_emoji": "EMOJI ID",
+	"events": {
+		"SHORT ARGUMENT NAME 1": {
+			"name": "EVENT NAME",
+			"timestamp": "ISO DATE TIME"
+		},
+		"SHORT ARGUMENT NAME 2": {
+			"name": "EVENT NAME",
+			"timestamp": "ISO DATE TIME"
+		},
+	},
+	"new_member_role": "ROLE ID",
+	"other_team_role": "ROLE ID",
+    "admin_role": "ROLE ID",
+    "avatar_url": "PATH TO LOCAL IMAGE FILE"
 }

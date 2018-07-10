@@ -1,10 +1,14 @@
 module.exports = {
+	padStart: function(originalString, targetLength, padString="0") {
+        return ("" + originalString).padStart(targetLength, padString);
+	},
+
 	// in format YY-MM-DD with leading zeroes as applicable
 	getDate: function() {
 		const now = new Date();
 		const year = now.getFullYear() - 2000;
-		const month = ("" + (now.getMonth() + 1)).padStart(2, "0");
-		const day = ("" + now.getDate()).padStart(2, "0");
+		const month = this.padStart(now.getMonth() + 1, 2);
+		const day = this.padStart(now.getDate(), 2);
 		return year + "-" + month + "-" + day;
 	},
 
@@ -23,13 +27,13 @@ module.exports = {
 	// h:m:s to hh:mm
 	longTimeToShort: function(timeString) {
 		const hms = timeString.split(":");
-		return hms[0].padStart(2, "0") + ":" + hms[1].padStart(2, "0");
+		return this.padStart(hms[0], 2) + ":" + this.padStart(hms[1], 2);
 	},
 
 	// seconds to hh:mm
 	secondsToFormattedTime: function(durationInSeconds) {
-		const fullHoursElapsed = ("" + Math.floor(durationInSeconds / 3600)).padStart(2, "0");
-		const fullMinutesElapsed = ("" + Math.floor((durationInSeconds % 3600) / 60)).padStart(2, "0");
+		const fullHoursElapsed = this.padStart(Math.floor(durationInSeconds / 3600), 2);
+		const fullMinutesElapsed = this.padStart(Math.floor((durationInSeconds % 3600) / 60), 2);
 		return fullHoursElapsed + ":" + fullMinutesElapsed;
 	},
 
@@ -43,10 +47,20 @@ module.exports = {
 		return (hours * 3600) + (minutes * 60) + seconds;
 	},
 
-	getTimeLog(meetingsLog, shouldMakeTable=true) {
+	getTimeLog(meetingsLog, subtractLog, shouldMakeTable=true) {
 		let totalTime = 0;
 		let timeRows = "|| day | |start| | end | |hours||\n";
 		let isStillLoggedIn = false;
+
+		for(const date in subtractLog) {
+			const day = this.longDateToShort(date);
+
+            const timeSubtractedInSec = this.getTimeDiffInSeconds("0:0:0", subtractLog[date] + ":0");
+			totalTime -= timeSubtractedInSec;
+
+			const formattedTimeDiff = this.secondsToFormattedTime(timeSubtractedInSec);
+			timeRows += `-|${day}| | >:( | | >:( | -${formattedTimeDiff}||\n`;
+		}
 
 		for(const date in meetingsLog) {
 			const timesLog = meetingsLog[date];
@@ -80,10 +94,10 @@ module.exports = {
 								const formattedEndTime = this.longTimeToShort(endTime);
 								const formattedTimeDiff = this.secondsToFormattedTime(timeDiff);
 
-								timeRows += `||${day}| |${formattedStartTime}| |${formattedEndTime}| |${formattedTimeDiff}||\n`;
+								timeRows += `+|${day}| |${formattedStartTime}| |${formattedEndTime}| |${formattedTimeDiff}||\n`;
 							}
 						} else if(shouldMakeTable) { // should not count because they have not logged out that day
-							timeRows += `||${day}| |${formattedStartTime}| |  ~  | |00:00||\n`;
+							timeRows += `+|${day}| |${formattedStartTime}| |  ~  | |00:00||\n`;
 						}
 					}
 				}
@@ -125,12 +139,17 @@ module.exports = {
 
 	// sendFullTimeTable must be either false, "in direct message", "in same channel"
 	sendUserLog: function(db, message, fullName, isBoardMember, sendFullTimeTable=false) {
-		db.ref(`log/${fullName}/meetings`).once("value", snapshot => {
-			const meetingsLog = snapshot.val();
-
-			const log = this.getTimeLog(meetingsLog, sendFullTimeTable);
-			const totalTimeInSec = log.totalTime;
-			const timeNeededInSec = (isBoardMember ? 216000 : 144000);
+		db.ref(`log/${fullName}`).once("value", snapshot => {
+			const data = snapshot.val();
+			let log;
+			let totalTimeInSec;
+			if(data) {
+				log = this.getTimeLog(data.meetings, data.subtract, sendFullTimeTable);
+				totalTimeInSec = log.totalTime;
+			} else { // member has never signed in
+				totalTimeInSec = 0;
+			}
+			const timeNeededInSec = (isBoardMember ? 288000 : 144000);
 			const timeLeftFormatted = ((timeNeededInSec > totalTimeInSec) ? this.secondsToFormattedTime(timeNeededInSec - totalTimeInSec) : ":zero:");
 
 			if(totalTimeInSec > 0) { // user has spent time
@@ -140,16 +159,16 @@ module.exports = {
 
 				message.channel.send(`**${fullName}** is currently **${loggedIn ? "" : "not "}logged in**. They have **${totalTime}** hours and need **${timeLeftFormatted}** hours.`);
 				if(sendFullTimeTable === "in same channel") {
-					message.channel.send("`" + timeRows + "`");
+					message.channel.send("```diff\n" + timeRows + "```");
 				} else if(sendFullTimeTable === "in direct message") {
-					message.author.send("Your log:\n`" + timeRows + "`").then(() => {
+					message.author.send("Your log:\n```diff\n" + timeRows + "```").then(() => {
 						message.channel.send("Check your DMs. I sent you your full timelog.");
 					}).catch(() => {
 						message.channel.send("I tried to send you a DM with your full timelog, but there was an error. :unamused: It's possible that you blocked me or don't allow DMs from me.");
 					});
 				}
 			} else { // user has not spent any time
-				message.channel.send(`**${fullName}** is not logged in and has **0 hours**. They should come more often, because they still have **${timeLeftFormatted}** time left.`);
+				message.channel.send(`**${fullName}** is not logged in and has :zero: **hours**. They still need to log **${timeLeftFormatted}**. <:oof:390016349004496896>`);
 			}
 		});
 	}
