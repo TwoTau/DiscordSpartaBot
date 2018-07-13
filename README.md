@@ -9,10 +9,17 @@ Returns info about the mentioned member or if no member is mentioned, the author
 
 Screenshot of `!info spartabot` (with discriminator and User ID removed):
 
-![Screenshot of !info spartabot](https://user-images.githubusercontent.com/14433542/31846949-a10f5660-b5c7-11e7-891f-608a22cd4937.png)
+![Screenshot of !info spartabot](https://user-images.githubusercontent.com/14433542/42710963-0e51097c-869b-11e8-8269-894292cb6d0d.png)
 
 ### repeat `<text>`
 Repeats the message and then deletes the author's message.
+
+### when `<event name>`
+Will tell you how much time there is until an event. The events are specified in `config.events`.
+
+Screenshot of `!when kickoff`:
+
+![Screenshot of !when kickoff](https://user-images.githubusercontent.com/14433542/42711718-c513de26-869d-11e8-9c40-550f90764ec6.png)
 
 ### togglerole `<role name>`
 Removes or adds a role from the author of the message. The role name must be in `config.toggleable_roles`;
@@ -29,7 +36,7 @@ Screenshot of `!purge 30`:
 ![Screenshot of !purge 30](https://user-images.githubusercontent.com/14433542/31846961-eb1d036a-b5c7-11e7-98db-cbac1a0617f1.png)
 
 ### log `<optional name of person>`
-Returns the history of the person's sign-ins and outs.This depends on the sign-in database being used (AKA `config.firebase_db_url`).
+Returns the history of the person's sign-ins and outs. This depends on the sign-in database being used (AKA `config.firebase_db_url`).
 
 - _If argument is specified_
     - _If the author is an admin_
@@ -41,12 +48,30 @@ Returns the history of the person's sign-ins and outs.This depends on the sign-i
     - Sends partial data in the same channel.
     - Direct messages the author their full sign-in history.
 
+### tophours
+Sends a list of the top nine people with the most hours.
+
+Screenshot of `!tophours` with placeholder names and hours:
+
+![Screenshot of !tophours](https://user-images.githubusercontent.com/14433542/42711996-d0bbd480-869e-11e8-9f34-5c7babf9d442.png)
+
+### subtracthours `<name>` `<time>` `<optional date>`
+Subtracts specified time from the person chosen. Subtract 0:00 hours to override the previous subtraction. The time argument must be in h:mm format and be between 0:01 and 23:59. The date argument, if specified, must be in M/D format.
+SpartaBot also sends a Discord Webhook to log the subtracted hours. In this example, the webhook goes to the #logs channel.
+
+Screenshot of `!subtracthours "Vishal Devireddy" "1:00"`:
+
+![Screenshot of !subtracthours](https://user-images.githubusercontent.com/14433542/42712202-8a7ac9a8-869f-11e8-85a5-ce1d0aa39ca3.png)
+
 ### tbateam `<FRC team number>`
 Returns information about a team using [TheBlueAlliance's API](https://www.thebluealliance.com/apidocs) given the team number.
 
 Screenshot of `!tbateam 2976`:
 
 ![Screenshot of !tbateam 2976](https://user-images.githubusercontent.com/14433542/31847009-e2413b52-b5c8-11e7-9e96-357db9643aab.png)
+
+### emoji `<emoji name>` `<optional number to repeat>`
+Sends an animated emoji and deletes the author's message. Only works with animated emoji. The number to repeat can be between 1 and 10.
 
 ### kys
 Terminates the program. This command can only be used by the bot creator.
@@ -56,12 +81,36 @@ Returns a list of the non-hidden commands along with a description and example u
 
 Screenshot of `!help`:
 
-![Screenshot of !help](https://user-images.githubusercontent.com/14433542/31846905-fc457998-b5c6-11e7-96ba-03c43a5454e9.png)
+![Screenshot of !help](https://user-images.githubusercontent.com/14433542/42710716-0730025c-869a-11e8-940e-88a1d76c9a66.png)
 
 Screenshot of `!help tbateam`:
 
 ![Screenshot of !help tbateam](https://user-images.githubusercontent.com/14433542/31846913-2e1caf40-b5c7-11e7-82c8-8e017f8a7a9f.png)
 
+### Music commands
+#### Commands:
+- **connect**: Connects to the author's voice channel if possible.
+- **disconnect**: Disconnects from voice channel.
+- **queue**: Lists the items in the queue.
+- **play**: Starts playing the queue.
+- **addq**: Adds to the queue a specified YouTube video by link or first search result.
+	- Usage: addq `<full youtube link OR search terms>`
+
+#### Subcommands when something is playing:
+- **pause**: Pauses currently playing song.
+- **resume**: Resumes paused song.
+- **skip**: Immediately moves to the next song in the queue.
+- **loop**: Adds current playing song to the front of the queue.
+- **time**: Displays how long the current song has been playing.
+
+#### Screenshots
+Adding a song by YouTube search terms: `!addq gracious professionalism rhythm`
+
+Adding a song by YouTube link: `!addq https://www.youtube.com/watch?v=98hwt-enGSE`
+
+![Screenshot of !addq](https://user-images.githubusercontent.com/14433542/42712973-8cdd38f4-86a2-11e8-83d5-005a0756c914.png)
+![Screenshot of !queue](https://user-images.githubusercontent.com/14433542/42713127-2f5c43cc-86a3-11e8-9fce-b84202175fe5.png)
+![Screenshot of new song playing](https://user-images.githubusercontent.com/14433542/42713152-4e99f86a-86a3-11e8-9cc8-8cb7c0281478.png)
 
 ## Creating a config file
 
