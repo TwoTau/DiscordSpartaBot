@@ -20,9 +20,9 @@ firebaseAdmin.initializeApp({
 const db = firebaseAdmin.database(); // database that contains member sign in and outs
 let memberNameList = {};
 
-const BOT_CREATOR_USER_ID = config.bot_creator_user_id;
+const BOT_CREATOR = config.bot_creator;
 
-const PREFIX = config.prefix;
+const PREFIX = config.options.prefix;
 
 const GET_TIME_FORMAT = "M/DD h:mm a";
 
@@ -71,7 +71,7 @@ function debug(text) {
  * @returns {boolean}
  */
 function isAuthorBotCreator(message) {
-	return message.author.id === BOT_CREATOR_USER_ID;
+	return message.author.id === BOT_CREATOR;
 }
 
 /**
@@ -238,7 +238,7 @@ function play(mChannel, queueItem) {
 	const queueItemUrl = queueItem.url;
 	
 	const ytAudioStream = ytdl(queueItemUrl, {audioonly: true});
-	const dispatcher = voiceChannel.connection.playStream(ytAudioStream, {passes: config.audio_playback_passes});
+	const dispatcher = voiceChannel.connection.playStream(ytAudioStream, {passes: config.options.audio_playback_passes});
 	
 	const collector = mChannel.createCollector(m => m);
 	collector.on("collect", message => {
@@ -292,7 +292,7 @@ bot.on("messageReactionAdd", (messageReaction) => {
 	const content = message.cleanContent.toLowerCase();
 	const isAuthorBot = message.author.id === bot.user.id;
 	const isMessageAutomated = content.includes("this is an automated message") || content.includes("it is known");
-	const isReactionDeleteEmoji = messageReaction.emoji.id === config.automated_message_delete_emoji;
+	const isReactionDeleteEmoji = messageReaction.emoji.id === config.automated_message.delete_emoji;
 	if(isAuthorBot && isMessageAutomated && isReactionDeleteEmoji) {
 		message.delete();
 	}
@@ -318,8 +318,8 @@ bot.on("message", message => {
 			const messageWords = cleanContent.split(" ");
 			
 			if((messageWords.includes("door") || messageWords.includes("room")) && (messageWords.includes("can") || messageWords.includes("open") || messageWords.includes("lock") || messageWords.includes("locked"))) {
-				const messageText = config.automated_open_door_message_text;
-				const deleteEmoji = message.guild.emojis.find("id", config.automated_message_delete_emoji) || "?";
+				const messageText = config.automated_message.open_door_message;
+				const deleteEmoji = message.guild.emojis.find("id", config.automated_message.delete_emoji) || "?";
 				message.reply(`${messageText} _React with_ ${deleteEmoji} _to delete this message._`);
 			}
 
@@ -496,7 +496,7 @@ const commands = [
 			} else { // does not already have the role
 				// do not allow users that just joined the server or are not team members to add roles
 				if(message.member.roles.has(config.new_member_role) || message.member.roles.has(config.other_team_role)) {
-					message.channel.send(`You have to be a member of our club/server to use ${PREFIX}togglerole. Ask <@!${BOT_CREATOR_USER_ID}> or someone with @God of Robotics to give you any roles.`);
+					message.channel.send(`You have to be a member of our club/server to use ${PREFIX}togglerole. Ask <@!${BOT_CREATOR}> or someone with @God of Robotics to give you any roles.`);
 					return;
 				}
 				
@@ -517,7 +517,7 @@ const commands = [
 		exampleUsage: ":regional_indicator_n: :o2:",
 		hiddenFromHelp: true,
 		execute: function(message, content) {
-			if(!(isAuthorBotCreator(message) && config.allow_eval_command)) {
+			if(!(isAuthorBotCreator(message) && config.options.allow_eval_command)) {
 				message.channel.send(":expressionless: :regional_indicator_n: :o2: :unamused:");
 				return;
 			}
@@ -556,7 +556,7 @@ const commands = [
 				message.channel.send("Sorry, but not everyone can be a dictator.");
 				return;
 			}
-			if(config.restrict_purge_to_bot_creator && !isAuthorBotCreator(message)) {
+			if(config.options.restrict_purge_to_bot_creator && !isAuthorBotCreator(message)) {
 				message.channel.send("Sorry, but not everyone should be a dictator.");
 				return;
 			}
@@ -608,14 +608,14 @@ const commands = [
 			}
 			
 			if(message.member.roles.has(config.new_member_role)) {
-				message.reply(`You have the new member role, which means we don't know your name. Change your nickname and then talk to <@!${BOT_CREATOR_USER_ID}> to add you to the sign in.`);
+				message.reply(`You have the new member role, which means we don't know your name. Change your nickname and then talk to <@!${BOT_CREATOR}> to add you to the sign in.`);
 				return;
 			}
 			if(message.member.roles.has(config.other_team_role)) {
 				message.reply("Only members of our team can use this command.");
 				return;
 			}
-			if(!config.enable_log_command) {
+			if(!config.options.enable_log_command) {
 				message.channel.send("Everyone's hours have been reset to 0.");
 				return;
 			}
@@ -632,7 +632,7 @@ const commands = [
 							signinHelper.sendUserLog(db, message, user.name, user.data.board, false);
 						}
 					} else { // user does not exist
-						message.channel.send(`Sorry, I can't find "**${content}**" in the database. If ${content} **is** a member, talk to <@!${BOT_CREATOR_USER_ID}> and they'll add it to the sign in.`);
+						message.channel.send(`Sorry, I can't find "**${content}**" in the database. If ${content} **is** a member, talk to <@!${BOT_CREATOR}> and they'll add it to the sign in.`);
 					}
 				} else { // argument is not a name
 					message.channel.send(`"${content}" should be a full name properly spelled.`);
@@ -642,7 +642,7 @@ const commands = [
 				if(user) { // user is in the database
 					signinHelper.sendUserLog(db, message, user.name, user.isBoardMember, "in direct message");
 				} else { // not in the database, could be from another team
-					message.channel.send(`Sorry, I don't know your full name, ${getAuthorNickname(message)}. If you **are** a club member, you should be in the database, so talk to <@!${BOT_CREATOR_USER_ID}> and they'll add you to the sign in.`);
+					message.channel.send(`Sorry, I don't know your full name, ${getAuthorNickname(message)}. If you **are** a club member, you should be in the database, so talk to <@!${BOT_CREATOR}> and they'll add you to the sign in.`);
 				}
 			}
 		}
@@ -655,7 +655,7 @@ const commands = [
 		exampleUsage: "tophours",
 		hiddenFromHelp: false,
 		execute: function(message) {
-			if(!config.enable_log_command) {
+			if(!config.options.enable_log_command) {
 				message.channel.send("Everyone's hours have been reset to 0.");
 				return;
 			}
@@ -754,7 +754,7 @@ const commands = [
 						message.reply(`The maximum you can subtract is 23:59 from a person per day. ${hoursToSubtract} is not within the bounds.`);
 					}
 				} else { // user does not exist
-					message.reply(`Sorry, I can't find "**${name}**" in the database. If ${name} **is** a member, talk to <@!${BOT_CREATOR_USER_ID}> and they'll fix this.`);
+					message.reply(`Sorry, I can't find "**${name}**" in the database. If ${name} **is** a member, talk to <@!${BOT_CREATOR}> and they'll fix this.`);
 				}
 			} else { // no argument or does not fit pattern, give error message
 				message.reply('You need to specify the person\'s name and the hours to subtract from them, both in quotation marks. E.g.\n```' + PREFIX + 'subtracthours "Full Name" "2:55"```or if you specify date to subtract from (in M/D format)```' + PREFIX + 'subtracthours "Full Name" "4:10" "1/6"```');
@@ -1048,7 +1048,7 @@ const commands = [
 					.setURL(githubUrl)
 					.setColor(0x137CB8)
 					.setAuthor(botDisplayName, "https://www.spartabots.org/images/spartabot-transparent-logo.png")
-					.setDescription(`You can find my source code on my [GitHub repo](${githubUrl} "${githubRepo}"). I'm a Discord bot made by <@!${BOT_CREATOR_USER_ID}> using [discord.js](https://discord.js.org "discord.js home page"). Here's a list of my commands (there are a few hidden ones).`)
+					.setDescription(`You can find my source code on my [GitHub repo](${githubUrl} "${githubRepo}"). I'm a Discord bot made by <@!${BOT_CREATOR}> using [discord.js](https://discord.js.org "discord.js home page"). Here's a list of my commands (there are a few hidden ones).`)
 					.setFooter(`${PREFIX}help ${optionalArgument} requested by ${getAuthorNickname(message)}`);
 
 				// adds a field to the embed for each command that is not hidden from help

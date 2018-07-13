@@ -2,7 +2,7 @@
 
 SpartaBot is a Discord bot made by Vishal using [discord.js](https://discord.js.org "discord.js home page"). This repository contains all the source code for the bot. If you want to fork this and run it yourself, follow the instructions in [Creating a config file](#creating-a-config-file).
 
-## List of commands
+## (Partial) List of commands
 
 ### info `<optional mentioned member>`
 Returns info about the mentioned member or if no member is mentioned, the author of the message.
@@ -18,10 +18,10 @@ Repeats the message and then deletes the author's message.
 Removes or adds a role from the author of the message. The role name must be in `config.toggleable_roles`;
 
 ### eval `<javascript code>`
-Executes JavaScript. This command can only be used by the bot creator, specified by `config.bot_creator_user_id` and requires that `config.allow_eval_command` is `true`.
+Executes JavaScript. This command can only be used by the bot creator, specified by `config.bot_creator` and requires that `config.options.allow_eval_command` is true.
 
 ### purge `<number of messages>`
-Delete the last _n_ comments. This command can only be used by admins, specified by `config.admin_role`.
+Delete the last _n_ comments. This command can only be used by admins, specified by `config.admin_role`. If `config.options.restrict_purge_to_bot_creator` is false, then this command can only be used by the bot creator.
 The bot also sends a quote from the dystopian novels _Farenheit 451_ or _Nineteen Eighty-Four_ to discourage abuse of this command.
 
 Screenshot of `!purge 30`:
@@ -67,16 +67,41 @@ Screenshot of `!help tbateam`:
 
 You will need to create a `config.json` file in this folder with secret keys and tokens for SpartaBot. View [config-example.json]() for a template. To find Discord user and channel IDs, [turn on Developer Mode](https://discordia.me/developer-mode) in Discord.
 
+You will also need a `serviceAccountKey.json` for accessing your Firebase database. You can download one from your Firebase project > Settings > Service accounts > Firebase Admin SDK.
+
 The keys in `config.json` are:
-- `discord_token`: the Discord bot token you find in the [Discord Developer panel](https://discordapp.com/developers/applications/me).
+- `discord_token`: The Discord bot token you find in the [Discord Developer panel](https://discordapp.com/developers/applications/me).
 - `tba_auth_key`: TheBlueAlliance API key that you find in your [TheBlueAlliance account page](https://www.thebluealliance.com/account).
 - `firebase_db_url`: The URL for the Firebase database that contains the sign-in data.
+- `youtube_api_key`: The YouTube API key that you can find in your [Google API Credentials](https://console.developers.google.com/apis/credentials). Instructions for creating a key [here](https://developers.google.com/youtube/registering_an_application#Create_API_Keys).
+-
+
+- `hours_log_webhook_url`: The Discord webhook URL to send subtract hours log messages to.
 - `github_repo`: The ending part of the GitHub url for your fork of this repository. For example: `twotau/DiscordSpartaBot`.
-- `allow_eval_command`: A boolean for whether SpartaBot can respond to the eval command if sent by the bot's owner. This is very dangerous because it allows the bot's owner to execute any code.
-- `prefix`: The characters that a message needs to start with for SpartaBot to recognize the message as a command. Common prefixes are `!` and `?`.
+- `avatar_url`: Path to a local image file that Discord accepts for avatars. For example: `spartabots-logo.png`.
+-
+
 - `debug_channel_id`: The Discord channel ID for a debug channel as a string. If this is specified, SpartaBot will send some logging messages to this channel.
-- `bot_creator_user_id`: The Discord user ID for the creator of the bot. This is used for eval permission and when determining whether a user has permissions to do something.
-- `toggleable_roles`: an object containing the name of the toggleable roles as the keys and the Discord role IDs (in string format) as the values.
-- `new_member_role`: The Discord role ID for the role SpartaBot assigns to members that join the server.
-- `admin_role`: The Discord role _name_ of the role given to those that can mass purge messages and have access to members' full hour logs.
-- `avatar_url`: Path to a local image file that Discord accepts for avatars. Example: `spartabots-logo.png`.
+- `bot_creator`: The Discord user ID for the creator of the bot. This is used for eval permission and when determining whether a user has permissions to do something.
+- `new_member_role`: The Discord role ID of the role SpartaBot will assign to members that join the server.
+- `other_team_role`: The Discord role ID of the role given to those of other teams. Users with this role are restricted in some ways, such as not being able to use the togglerole or log commands.
+- `admin_role`: The Discord role ID of the role given to those that can mass purge messages (if `restrict_purge_to_bot_creator` is false) and have access to members' full hour logs.
+-
+
+- `options`: An object containing this:
+	- `prefix`: The characters that a message needs to start with for SpartaBot to recognize the message as a command. Common prefixes are `!` and `?`.
+	- `audio_playback_passes`: The integer number of passes to send audio data to Discord. A higher number of passes gives you a less lossy sound, but costs more bandwidth. The default value is 3, and anything above 5 is not recommended.
+	- `allow_eval_command`: A boolean for whether SpartaBot can respond to the eval command if sent by the bot's owner. This is very dangerous because it allows the bot's owner to execute any code.
+	- `enable_log_command`: A boolean for whether users can use the log command (should only be true for the build season).
+	- `restrict_purge_to_bot_creator`: A boolean for whether only the bot creator can use the purge command. If false, anyone with the `admin_role` can use purge.
+
+- `automated_message`: An object containing values relevant to automated messages:
+	- `open_door_message`: The message to send when someone asks for the build room door to be opened.
+	- `delete_emoji`: The Discord emoji ID of the reaction that will cause Spartabot to delete an automated message.
+
+- `toggleable_roles`: An object containing the name of the toggleable roles as the keys and the Discord role IDs (in string format) as the values.
+
+- `events`: An object containing the short name of the events as the keys and objects (with the event name and ISO timestamp) as the values. For example:
+	- _short argument name_: An argument for the when command.
+		- `name`: The full name of the event.
+		- `timestamp` the ISO date time. For example: "2018-02-20T20:59:00.000".
