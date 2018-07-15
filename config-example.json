@@ -6,7 +6,6 @@
 	
 	"hours_log_webhook_url": "DISCORD WEBHOOK URL",
 	"github_repo": "twotau/DiscordSpartaBot",
-	"avatar_url": "PATH TO LOCAL IMAGE FILE",
 	
 	"debug_channel_id": "CHANNEL ID",
 	"bot_creator": "USER ID",
@@ -41,6 +40,6 @@
 		"SHORT ARGUMENT NAME 2": {
 			"name": "EVENT NAME",
 			"timestamp": "ISO DATE TIME"
-		},
+		}
 	}
 }

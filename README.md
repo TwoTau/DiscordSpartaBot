@@ -127,7 +127,6 @@ The keys in `config.json` are:
 
 - `hours_log_webhook_url`: The Discord webhook URL to send subtract hours log messages to.
 - `github_repo`: The ending part of the GitHub url for your fork of this repository. For example: `twotau/DiscordSpartaBot`.
-- `avatar_url`: Path to a local image file that Discord accepts for avatars. For example: `spartabots-logo.png`.
 -
 
 - `debug_channel_id`: The Discord channel ID for a debug channel as a string. If this is specified, SpartaBot will send some logging messages to this channel.
