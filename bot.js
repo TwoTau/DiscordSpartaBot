@@ -1030,6 +1030,17 @@ const commands = [
 			});
 		}
 	},
+	
+	{
+		name: "ping",
+		description: "Shows the bot's ping response time.",
+		usage: "ping",
+		exampleUsage: "ping",
+		hiddenFromHelp: false,
+		execute: function(message) {
+			message.channel.send(Math.round(bot.ping) + " ms");
+		}
+	},
 
 	{
 		name: "help",
