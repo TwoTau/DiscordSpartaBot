@@ -2,25 +2,23 @@
 	"name": "discord-spartabot",
 	"version": "1.0.0",
 	"description": "A helpful Discord bot for the Spartabots server",
+	"author": "Vishal Devireddy (TwoTau)",
 	"repository": "github:TwoTau/DiscordSpartaBot",
 	"bugs": {
 		"url": "https://github.com/TwoTau/DiscordSpartaBot/issues"
 	},
 	"engines": {
-		"node": "9.3.0"
+		"node": "12.5.x"
 	},
 	"main": "bot.js",
 	"scripts": {
 		"start": "node bot.js"
 	},
 	"dependencies": {
-		"discord.js": "^11.3.2",
-		"ffmpeg-binaries": "^3.2.2-3",
-		"firebase-admin": "^4.2.1",
-		"moment": "^2.18.1",
-		"node-opus": "^0.2.7",
-		"request": "^2.81.0",
-		"youtube-search": "^1.1.0",
-		"ytdl-core": "^0.20.2"
+		"discord.js": "^11.4.2",
+		"firebase-admin": "^8.2.0",
+		"moment": "^2.24.0",
+		"node-wit": "^5.0.0",
+		"request": "^2.88.0"
 	}
 }

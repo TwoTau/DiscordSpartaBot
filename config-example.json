@@ -1,31 +1,29 @@
 {
 	"discord_token": "DISCORD TOKEN",
 	"tba_auth_key": "THE BLUE ALLIANCE API KEY",
+
 	"firebase_db_url": "FIREBASE DATABASE URL",
-	"youtube_api_key": "YOUTUBE API KEY",
-	
 	"hours_log_webhook_url": "DISCORD WEBHOOK URL",
+
 	"github_repo": "twotau/DiscordSpartaBot",
-	
 	"debug_channel_id": "CHANNEL ID",
 	"bot_creator": "USER ID",
+
 	"new_member_role": "ROLE ID",
 	"other_team_role": "ROLE ID",
 	"admin_role": "ROLE ID",
-	
+
 	"options": {
 		"prefix": "!",
-		"audio_playback_passes": 3,
 		"allow_eval_command": true,
 		"enable_log_command": true,
-		"restrict_purge_to_bot_creator": false,
+		"restrict_purge_to_bot_creator": false
 	},
-	
+
 	"automated_message": {
-		"open_door_message": "This is an automated message. If the door to the school is locked, call the robotics room number at **000-000-0000** to get someone to open it.",
-		"delete_emoji": "EMOJI ID"
+		"open_door_message": "This is an automated message. If the door to the school is locked, call the robotics room number at **000-000-0000** to get someone to open it."
 	},
-	
+
 	"toggleable_roles": {
 		"SHORT ARGUMENT NAME 1": "ROLE ID",
 		"SHORT ARGUMENT NAME 2": "ROLE ID",
