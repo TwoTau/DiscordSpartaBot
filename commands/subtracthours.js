@@ -3,7 +3,7 @@ const LogCommand = require("../logcommand");
 const config = require("../config.json");
 const signinHelper = require("../signinHelper");
 const moment = require("moment");
-const request = require("request");
+const axios = require("axios");
 
 module.exports = new LogCommand(
 	"subtracthours",
@@ -56,18 +56,15 @@ module.exports = new LogCommand(
 					});
 
 					// send data to the subtracthours Discord webhook
-					request.post(
-						config.hours_log_webhook_url, {
-							json: {
-								content: removalMessage
-							}
-						}, (error, response, body) => {
-							if (error) {
-								Command.debug(`ERROR:\n${error} | Status code ${response.statusCode} | ${body}`);
-							}
+					axios.post(config.hours_log_webhook_url, {
+						content: removalMessage
+					}).catch(error => {
+						if (error.response) {
+							Command.debug(`Error:\n${error.data} | Status code ${error.status} | ${error.headers}`);
+						} else {
+							Command.debug("Error:\n" + error.message);
 						}
-					);
-
+					});
 				} else { // time to subtract not within bounds
 					message.reply(`The maximum you can subtract is 23:59 from a person per day. ${hoursToSubtract} is not within the bounds.`);
 				}

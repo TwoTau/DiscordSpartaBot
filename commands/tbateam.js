@@ -1,57 +1,121 @@
 const Command = require("../command");
 const config = require("../config.json");
 const discord = require("discord.js");
-const request = require("request");
+const moment = require("moment");
+const axios = require("axios");
+
+const authParams = {
+	params: {
+		"X-TBA-Auth-Key": config.tba_auth_key
+	}
+};
+
+function handleTBAApiError(error) {
+	if (error.response) {
+		console.log("Something went wrong with using TBA's API.\nError " + error.response.status);
+	} else {
+		console.log("Something went wrong.\nError:\n" + error.message);
+	}
+}
+
+async function addAwardsToEmbed(embed, teamNumber) {
+	// return new Promise((resolve, reject) => {
+	return axios.get(`http://www.thebluealliance.com/api/v3/team/frc${teamNumber}/awards`, authParams).then(response => {
+		let numAwardsWon = response.data.length;
+		if (response.data.length > 0) {
+			const latest = response.data[response.data.length - 1].event_key;
+			numAwardsWon += ` (latest [${latest}](https://www.thebluealliance.com/event/${latest}))`;
+		} else {
+			numAwardsWon += " (yet)";
+		}
+		embed.addField("Awards won", numAwardsWon, true);
+		// resolve(embed);
+	}).catch(error => {
+		handleTBAApiError(error);
+	});
+	// });
+}
+
+async function addEventsToEmbed(embed, teamNumber) {
+	// return new Promise((resolve, reject) => {
+	return axios.get(`http://www.thebluealliance.com/api/v3/team/frc${teamNumber}/events/simple`, authParams).then(response => {
+		if (response.data.length > 0) {
+			const API_DATE_FORMAT = "YYYY-MM-DD";
+			
+			// get 5 most recent events
+			const mostRecentEvents = response.data.sort((a, b) =>
+				moment(a.start_date, API_DATE_FORMAT).isAfter(moment(b.start_date, API_DATE_FORMAT)) ? -1 : 1
+			).slice(0, 5).map(event => {
+				const date = moment(event.start_date, API_DATE_FORMAT).format("MM/DD/YYYY");
+				return `[\`${date}\` - ${event.name}](https://www.thebluealliance.com/event/${event.key})`;
+			});
+			
+			let eventsAsString = mostRecentEvents.join("\n");
+			if (mostRecentEvents.length === 5) {
+				eventsAsString += `\n...and ${response.data.length - 5} more`;
+			}
+			
+			embed.addField("Events", eventsAsString, false);
+			// resolve(embed);
+		}
+	}).catch(error => {
+		handleTBAApiError(error);
+	});
+	// });
+}
+
+async function makeEmbed(data) {
+	const teamNumber = data.team_number;
+	const motto = data.motto ? `"${data.motto}"` : "_none_";
+	const location = data.city ? `${data.city}, ${data.state_prov}` : "unknown";
+	const nickname = data.nickname || "";
+
+	const embed = new discord.RichEmbed()
+		.setTitle(`FRC Team ${teamNumber}: ${nickname}`)
+		.setURL("https://www.thebluealliance.com/team/" + data.team_number)
+		.setColor(0x12C40F)
+		.addField("Team number", teamNumber, true)
+		.addField("Nickname", nickname, true)
+		.addField("Location", location, true)
+		.addField("Motto", motto, true)
+		.addField("Website", data.website || "_none_", true)
+		.addField("Rookie year", data.rookie_year, true);
+	
+	await addAwardsToEmbed(embed, teamNumber);
+
+	await addEventsToEmbed(embed, teamNumber);
+
+	return embed;
+}
 
 module.exports = new Command(
 	"tbateam",
 	"Will give you information about a team given the team number.",
-	"tbateam <teamnumber t where t ∈ ℤ ∩ [1,7999]>",
+	"tbateam <teamnumber t where t ∈ ℤ ∩ [1,8000]>",
 	"tbateam 2976",
 	function (message, content) {
 		if (!content) { // no parameter
-			message.channel.send("You need to specify a team number (1-7999).");
+			message.channel.send("You need to specify a team number (1-8000).");
 			return;
 		}
 
-		if (+content > 0 && +content <= 7999) { // parameter is valid
+		const teamNumber = +content;
+
+		if (teamNumber > 0 && teamNumber <= 8000) { // parameter is valid
 			// send a request to TheBlueAlliance's API for team information
-			request({
-				url: `http://www.thebluealliance.com/api/v3/team/frc${+content}?X-TBA-Auth-Key=${config.tba_auth_key}`,
-				json: true
-			}, (error, response, body) => {
-
-				// page could not be found, so the team does not exist
-				if (response.statusCode === 404) {
-					message.channel.send(`Team ${+content} doesn't exist.`);
-					return;
+			axios.get("http://www.thebluealliance.com/api/v3/team/frc" + teamNumber, authParams).then(response => {
+				makeEmbed(response.data).then(embed => {
+					message.channel.send({ embed });
+				});
+			}).catch(error => {
+				if (error.response && error.response.status === 404) {
+					message.channel.send(`Team ${teamNumber} doesn't exist. This is because FRC leaves some numbers unassigned.`);
+				} else {
+					handleTBAApiError(error);
 				}
-
-				// did not receive an OK status code
-				if (error || response.statusCode !== 200) {
-					message.channel.send("Something went wrong with using TheBlueAlliance's API");
-					return;
-				}
-
-				const motto = body.motto ? `"${body.motto}"` : "_none_";
-				const location = body.city ? `${body.city}, ${body.state_prov}` : "unknown";
-				const nickname = body.nickname || "";
-
-				const embed = new discord.RichEmbed()
-					.setTitle(`FRC Team ${body.team_number}: ${nickname}`)
-					.setURL(`https://www.thebluealliance.com/team/${body.team_number}`)
-					.setColor(0x12C40F)
-					.addField("Team number", body.team_number, true)
-					.addField("Nickname", nickname, true)
-					.addField("Location", location, true)
-					.addField("Motto", motto, true)
-					.addField("Website", body.website || "_none_", true);
-
-				message.channel.send({ embed });
 			});
-
 		} else { // parameter is not valid
-			message.channel.send(`${content} is not a number between 1-7999.`);
+			message.channel.send(`${content} is not a number between 1-8000.`);
 		}
 	}
 );
