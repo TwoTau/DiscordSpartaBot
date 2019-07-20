@@ -1,16 +1,16 @@
-const Command = require("../command");
-const LogCommand = require("../logcommand");
-const config = require("../config.json");
-const signinHelper = require("../signinHelper");
+const Command = require('../command');
+const LogCommand = require('../logcommand');
+const signinHelper = require('../signinHelper');
+const config = require('../config.json');
 
 module.exports = new LogCommand(
-	"log",
-	"Will send the history of your sign-ins and outs.",
-	"log <optional name of person>",
-	"log",
-	function (message, args) {
-		if (message.channel.name !== "spam" && message.channel.id !== config.debug_channel_id) {
-			const spamChannel = message.guild.channels.find("name", "spam") || "#spam";
+	'log',
+	'Will send the history of your sign-ins and outs.',
+	'log <optional name of person>',
+	'log',
+	(message, args) => {
+		if (message.channel.name !== 'spam' && message.channel.id !== config.debug_channel_id) {
+			const spamChannel = message.guild.channels.find('name', 'spam') || '#spam';
 			message.reply(`please use ${spamChannel} for bot commands next time.`);
 		}
 
@@ -19,7 +19,7 @@ module.exports = new LogCommand(
 			return;
 		}
 		if (message.member.roles.has(config.other_team_role)) {
-			message.reply("Only members of our team can use this command.");
+			message.reply('Only members of our team can use this command.');
 			return;
 		}
 		if (!config.options.enable_log_command) {
@@ -34,7 +34,7 @@ module.exports = new LogCommand(
 				const user = signinHelper.doesUserExist(LogCommand.memberNameList, content);
 				if (user) { // user exists
 					if (Command.isAuthorAdmin(message)) { // admin, so send full data
-						signinHelper.sendUserLog(LogCommand.db, message, user.name, user.data.board, "in same channel");
+						signinHelper.sendUserLog(LogCommand.db, message, user.name, user.data.board, 'in same channel');
 					} else { // not admin, so send only partial data
 						signinHelper.sendUserLog(LogCommand.db, message, user.name, user.data.board, false);
 					}
@@ -47,10 +47,10 @@ module.exports = new LogCommand(
 		} else { // no argument, default to user's own name
 			const user = signinHelper.findUserFromDiscordId(LogCommand.memberNameList, message.author.id);
 			if (user) { // user is in the database
-				signinHelper.sendUserLog(LogCommand.db, message, user.name, user.isBoardMember, "in direct message");
+				signinHelper.sendUserLog(LogCommand.db, message, user.name, user.isBoardMember, 'in direct message');
 			} else { // not in the database, could be from another team
 				message.channel.send(`Sorry, I don't know your full name, ${Command.getAuthorNickname(message)}. If you **are** a club member, you should be in the database, so talk to <@!${config.bot_creator}> and they'll add you to the sign in.`);
 			}
 		}
-	}
+	},
 );

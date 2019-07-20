@@ -1,8 +1,7 @@
-const config = require("./config.json");
-const moment = require("moment");
+const moment = require('moment');
+const config = require('./config.json');
 
 module.exports = class Command {
-
 	/**
 	 * Constructs a new command
 	 *
@@ -34,7 +33,7 @@ module.exports = class Command {
 	 * @returns {string} Date in M/DD h:mm a format
 	 */
 	static getTime() {
-		return moment().format("M/DD h:mm a");
+		return moment().format('M/DD h:mm a');
 	}
 
 	/**
@@ -44,10 +43,11 @@ module.exports = class Command {
 	 * @returns {?Promise} Sending the message resolves with success or failure
 	 */
 	static debug(text) {
+		// eslint-disable-next-line no-console
 		console.log(text);
 		const debugChannel = Command.bot.channels.get(config.debug_channel_id);
 		if (debugChannel) {
-			return debugChannel.send(text);
+			debugChannel.send(text);
 		}
 	}
 
@@ -83,8 +83,7 @@ module.exports = class Command {
 		if (message.member) {
 			return message.member.displayName;
 		}
-		const nickname = message.guild.members.get(message.author.id).nickname;
-		return nickname ? nickname : message.author.username;
+		const { nickname } = message.guild.members.get(message.author.id);
+		return (nickname || message.author.username);
 	}
-
 };
