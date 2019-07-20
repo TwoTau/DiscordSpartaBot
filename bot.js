@@ -101,6 +101,7 @@ const commands = [
 	require("./commands/togglerole"),
 	require("./commands/tbateam"),
 	
+	require("./commands/stat"),
 	require("./commands/eval"),
 	require("./commands/purge"),
 	require("./commands/kys"),
