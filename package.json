@@ -4,6 +4,7 @@
 	"description": "A helpful Discord bot for the Spartabots server",
 	"author": "Vishal Devireddy (TwoTau)",
 	"repository": "github:TwoTau/DiscordSpartaBot",
+	"license": "MIT",
 	"bugs": {
 		"url": "https://github.com/TwoTau/DiscordSpartaBot/issues"
 	},
