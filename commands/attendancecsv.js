@@ -1,6 +1,6 @@
 const Command = require('../command');
 const LogCommand = require('../logcommand');
-const signinHelper = require('../signinHelper');
+const signinHelper = require('../util/signinHelper');
 const config = require('../config.json');
 
 module.exports = new LogCommand(
@@ -8,7 +8,7 @@ module.exports = new LogCommand(
 	'Will send a CSV of all the hours. Only admins can use this command.',
 	'attendancecsv',
 	'attendancecsv',
-	(message) => {
+	async (message) => {
 		if (!config.options.enable_log_command) {
 			message.channel.send("Everyone's hours have been reset to 0.");
 			return;
@@ -19,34 +19,32 @@ module.exports = new LogCommand(
 			return;
 		}
 
-		LogCommand.db.ref('log').once('value', (snapshot) => {
-			const data = snapshot.val();
+		const data = (await LogCommand.db.ref('log').once('value')).val();
 
-			const lb = [];
+		const lb = [];
 
-			for (const fullName of Object.keys(LogCommand.memberNameList)) {
-				const memberLog = data[fullName];
+		for (const fullName of Object.keys(LogCommand.memberNameList)) {
+			const memberLog = data[fullName];
 
-				const logObject = {
-					name: fullName,
-					time: 0,
-					formattedTime: '0:00',
-				};
+			const logObject = {
+				name: fullName,
+				time: 0,
+				formattedTime: '0:00',
+			};
 
-				if (memberLog) {
-					const log = signinHelper.getTimeLog(memberLog.meetings,
-						memberLog.subtract, false);
-					logObject.time = log.totalTime;
-					logObject.formattedTime = log.formattedTime;
-				}
-
-				lb.push(logObject);
+			if (memberLog && memberLog.meetings) {
+				const log = signinHelper.getTimeLog(memberLog.meetings,
+					memberLog.subtract, false);
+				logObject.time = log.totalTime;
+				logObject.formattedTime = log.formattedTime;
 			}
 
-			const csv = lb.map(member => `${member.name},${member.time}`).join('\n');
+			lb.push(logObject);
+		}
 
-			message.channel.send(csv);
-		});
+		const csv = lb.map(member => `${member.name},${member.time}`).join('\n');
+
+		message.channel.send(csv);
 	},
 );
 

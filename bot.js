@@ -60,7 +60,7 @@ bot.on('message', (message) => {
 
 	if (command) {
 		const spaceCharacterIndex = messageContent.indexOf(' ');
-		const args = (spaceCharacterIndex > 0) ? messageContent.substr(spaceCharacterIndex + 1) : '';
+		const args = (spaceCharacterIndex > 0) ? messageContent.substr(spaceCharacterIndex + 1).trim() : '';
 		command.execute(message, args);
 		return;
 	}
@@ -86,7 +86,9 @@ bot.on('message', (message) => {
 		const greeting = greetingWord[0][0].toUpperCase() + greetingWord[0].substr(1);
 		message.channel.send(`${greeting} ${Command.getAuthorNickname(message)}`);
 	} else if (cleanContent === 'no u' || cleanContent.includes(' no u') || cleanContent.includes('no u ')) {
-		message.channel.send('no u');
+		if (message.channel.name !== 'general') {
+			message.channel.send('no u');
+		}
 	} else if (Math.random() < 0.0002) { // 0.02% chance
 		message.channel.send('Allegedly');
 	}
@@ -109,6 +111,7 @@ commands = [
 
 	require('./commands/log'),
 	require('./commands/tophours'),
+	require('./commands/corrections'),
 	require('./commands/subtracthours'),
 	require('./commands/timestats'),
 	require('./commands/attendancecsv'),
