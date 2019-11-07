@@ -2,7 +2,7 @@ const axios = require('axios');
 const moment = require('moment');
 const Command = require('../command');
 const LogCommand = require('../logcommand');
-const signinHelper = require('../signinHelper');
+const signinHelper = require('../util/signinHelper');
 const config = require('../config.json');
 
 module.exports = new LogCommand(
@@ -16,7 +16,7 @@ module.exports = new LogCommand(
 			return;
 		}
 
-		if (content && (/^"[A-Za-z]+ [A-Za-z]+( [A-Za-z]+)?" "(0|1|2)?\d:(0|1|2|3|4|5)\d"( "(0|1)?\d\/(0|1|2|3)?\d")?$/).test(content)) { // argument is specified and fits pattern
+		if (content && (/^"([A-Za-z-]+ )+[A-Za-z-]+?" "(0|1|2)?\d:(0|1|2|3|4|5)\d"( "(0|1)?\d\/(0|1|2|3)?\d")?$/).test(content)) { // argument is specified and fits pattern
 			const argumentList = content.replace(/"/g, ' ').trim().split('   ');
 			const name = argumentList[0];
 			let hoursToSubtract = argumentList[1];
@@ -69,7 +69,7 @@ module.exports = new LogCommand(
 					message.reply(`The maximum you can subtract is 23:59 from a person per day. ${hoursToSubtract} is not within the bounds.`);
 				}
 			} else { // user does not exist
-				message.reply(`Sorry, I can't find "**${name}**" in the database. If ${name} **is** a member, talk to <@!${config.bot_creator}> and they'll fix this.`);
+				message.reply(`Sorry, I can't find "**${name}**" in the database. Make sure you spell it correctly.`);
 			}
 		} else { // no argument or does not fit pattern, give error message
 			const command = `${config.options.prefix}subtracthours`;

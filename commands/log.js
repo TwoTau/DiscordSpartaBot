@@ -1,6 +1,6 @@
 const Command = require('../command');
 const LogCommand = require('../logcommand');
-const signinHelper = require('../signinHelper');
+const signinHelper = require('../util/signinHelper');
 const config = require('../config.json');
 
 module.exports = new LogCommand(
@@ -39,7 +39,7 @@ module.exports = new LogCommand(
 						signinHelper.sendUserLog(LogCommand.db, message, user.name, user.data.board, false);
 					}
 				} else { // user does not exist
-					message.channel.send(`Sorry, I can't find "**${content}**" in the database. If ${content} **is** a member, talk to <@!${config.bot_creator}> and they'll add it to the sign in.`);
+					message.channel.send(`Sorry, I can't find "**${content}**" in the database. If ${content} **is** a member, talk to a board member and they'll add it to the sign in.`);
 				}
 			} else { // argument is not a name
 				message.channel.send(`"${content}" should be a full name properly spelled.`);
@@ -49,7 +49,7 @@ module.exports = new LogCommand(
 			if (user) { // user is in the database
 				signinHelper.sendUserLog(LogCommand.db, message, user.name, user.isBoardMember, 'in direct message');
 			} else { // not in the database, could be from another team
-				message.channel.send(`Sorry, I don't know your full name, ${Command.getAuthorNickname(message)}. If you **are** a club member, you should be in the database, so talk to <@!${config.bot_creator}> and they'll add you to the sign in.`);
+				message.channel.send(`Sorry, I don't know your full name, ${Command.getAuthorNickname(message)}. If you **are** a club member, you should be in the database, so talk to a board member and they'll add you to the sign in.`);
 			}
 		}
 	},

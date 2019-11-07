@@ -13,7 +13,7 @@ module.exports = new Command(
 		let member;
 		const content = args.trim();
 		if (!content) { // default to author
-			member = { message };
+			({ member } = message);
 		} else if (mentionedMembers.size) { // mentioned someone
 			member = mentionedMembers.first();
 		} else { // there is content

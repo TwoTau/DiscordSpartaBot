@@ -1,9 +1,10 @@
+const axios = require('axios');
 const discord = require('discord.js');
 const moment = require('moment');
 const util = require('util');
 const Command = require('../command');
 const LogCommand = require('../logcommand');
-const signinHelper = require('../signinHelper');
+const signinHelper = require('../util/signinHelper');
 const config = require('../config.json');
 
 function cleanResult(text) {

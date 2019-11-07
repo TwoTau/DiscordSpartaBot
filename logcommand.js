@@ -17,7 +17,7 @@ module.exports = class LogCommand extends Command {
 		LogCommand.db = firebaseAdmin.database();
 		LogCommand.memberNameList = {};
 
-		LogCommand.db.ref('members').once('value', (snapshot) => {
+		LogCommand.db.ref('members').once('value').then((snapshot) => {
 			LogCommand.memberNameList = snapshot.val();
 		});
 	}
