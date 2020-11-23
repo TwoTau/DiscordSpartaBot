@@ -1,12 +1,12 @@
 const discord = require('discord.js');
-const Command = require('../command');
 const LogCommand = require('../logcommand');
 const signinHelper = require('../util/signinHelper');
+const { send, reply, isAuthorAdmin } = require('../util/util');
 
 function sendCorrectionsInMessages(channel, corrections, correctionsPerMessage) {
 	for (let p = 0; p < corrections.length; p += correctionsPerMessage) {
 		const pageNum = `${(p / correctionsPerMessage) + 1}/${Math.ceil(corrections.length / correctionsPerMessage)}`;
-		const embed = new discord.RichEmbed()
+		const embed = new discord.MessageEmbed()
 			.setTitle(`Corrections (${pageNum})`)
 			.setColor(0xF62828);
 		const end = Math.min(p + correctionsPerMessage, corrections.length);
@@ -24,7 +24,7 @@ module.exports = new LogCommand(
 	'corrections <optional name of person>',
 	'corrections Firstname Lastname',
 	async (message, content) => {
-		if (!Command.isAuthorAdmin(message)) { // author is not an admin
+		if (!isAuthorAdmin(message)) { // author is not an admin
 			message.reply('Only admins can use this command.');
 			return;
 		}
@@ -34,20 +34,24 @@ module.exports = new LogCommand(
 		if (name) {
 			member = signinHelper.doesUserExist(LogCommand.memberNameList, name);
 			if (!member) { // member does not exist
-				message.reply(`Sorry, I can't find "**${name}**" in the database.`);
+				reply(message, `Sorry, I can't find "**${name}**" in the database.`);
 				return;
 			}
 		}
 
 		const correctionsData = await signinHelper.getCorrections(LogCommand.db);
+		if (correctionsData.length === 0) {
+			message.channel.send('There are no corrections.');
+			return;
+		}
 		const corrections = correctionsData.sort((a, b) => (a.submitted.isBefore(b.submitted) ? -1 : 1));
 
 		if (name) { // send only name's messages
-			const filteredCorrections = corrections.filter(c => c.name === member.name);
+			const filteredCorrections = corrections.filter((c) => c.name === member.name);
 			if (filteredCorrections.length) {
 				sendCorrectionsInMessages(message.channel, filteredCorrections, 3);
 			} else {
-				message.channel.send(`${member.name} has no corrections.`);
+				send(message.channel, `${member.name} has no corrections.`);
 			}
 		} else { // send everything
 			sendCorrectionsInMessages(message.channel, corrections, 3);

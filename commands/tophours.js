@@ -1,42 +1,42 @@
 const LogCommand = require('../logcommand');
 const signinHelper = require('../util/signinHelper');
-const config = require('../config.json');
+const { config, send, reply } = require('../util/util');
 
 module.exports = new LogCommand(
 	'tophours',
-	'Will send a list of the top nine people with the most hours. Use an option to filter for certain members.',
-	'tophours <optional `no-present` or `no-board` argument>',
-	'tophours no-present',
+	'Will send a list of the top ten people with the most hours. Use an option to filter for certain members.',
+	'tophours <optional `include-board` argument>',
+	'tophours include-board',
 	async (message, content) => {
-		if (!config.options.enable_log_command) {
+		if (!config.get('options.enable_log_command')) {
 			message.channel.send("Everyone's hours have been reset to 0.");
 			return;
 		}
 
-		const maxNameLength = 20;
+		let maxNameLength = 5;
 		const lb = [];
 
 		const data = (await LogCommand.db.ref('log').once('value')).val();
 
 		let filterPromise;
-		if (content.toLowerCase() === 'no-present' || content.toLowerCase() === 'no-board') {
-			const filterOut = content.toLowerCase().substring(3);
-			filterPromise = new Promise((resolve) => {
-				LogCommand.db.ref('members').once('value').then((membersSnap) => {
-					const filteredOutMembers = [];
-					const members = membersSnap.val();
-					for (const member of Object.keys(members)) {
-						if (members[member][filterOut]) {
-							filteredOutMembers.push(member);
-						}
-					}
-					resolve(filteredOutMembers);
-				});
-			});
-		} else {
+		if (content && content.toLowerCase() === 'include-board') {
 			// promise resolves immediately with no filtered out names
 			filterPromise = new Promise((resolve) => {
 				resolve([]);
+			});
+		} else {
+			if (content.length) {
+				reply(message, `Argument \`${content.toLowerCase()}\` is invalid. Try \`${config.get('options.prefix')}tophours include-board\` if you want to include board members`);
+			}
+			filterPromise = new Promise((resolve) => {
+				const filteredOutMembers = [];
+				const members = LogCommand.memberNameList;
+				for (const member of Object.keys(members)) {
+					if (members[member].groups.split(' ').includes('board')) {
+						filteredOutMembers.push(member);
+					}
+				}
+				resolve(filteredOutMembers);
 			});
 		}
 
@@ -52,6 +52,7 @@ module.exports = new LogCommand(
 							time: log.totalTime,
 							formattedTime: log.formattedTime,
 						});
+						maxNameLength = Math.max(maxNameLength, fullName.length);
 					}
 				}
 			}
@@ -61,8 +62,8 @@ module.exports = new LogCommand(
 				const name = member.name.padStart(maxNameLength, ' ');
 				return `# ${index + 0} | ${name} | ${member.formattedTime}`;
 			}).join('\n');
-			const tableHeader = `  # |${' '.repeat(maxNameLength - 3)}NAME | TIME`;
-			message.channel.send(`\`\`\`\`markdown\n${tableHeader}\n${formattedList}\`\`\``);
+			const tableHeader = `  # | ${'NAME'.padStart(maxNameLength, ' ')} | TIME`;
+			send(message.channel, `\`\`\`markdown\n${tableHeader}\n${formattedList}\`\`\``);
 		});
 	},
 );

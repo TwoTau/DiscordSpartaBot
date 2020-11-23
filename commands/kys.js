@@ -1,4 +1,5 @@
 const Command = require('../command');
+const { isAuthorBotCreator } = require('../util/util');
 
 module.exports = new Command(
 	'kys',
@@ -7,12 +8,15 @@ module.exports = new Command(
 	'kys',
 	async (message) => {
 		// disallow killing this program by anyone but the bot creator
-		if (!Command.isAuthorBotCreator(message)) {
+		if (!isAuthorBotCreator(message)) {
 			message.channel.send(':angry: :regional_indicator_n: :o2: :rage:');
 			return;
 		}
 
-		await message.channel.send(':scream: Shutting down :skull:');
+		await Promise.all([
+			message.channel.send(':scream: Shutting down :skull:'),
+			Command.debug('Shutting down from kys'),
+		]);
 		await Command.bot.destroy();
 		process.exit();
 	},

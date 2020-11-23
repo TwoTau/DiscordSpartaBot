@@ -1,8 +1,7 @@
 const discord = require('discord.js');
-const Command = require('../command');
 const LogCommand = require('../logcommand');
 const signinHelper = require('../util/signinHelper');
-const config = require('../config.json');
+const { config, getTime, getAuthorNickname } = require('../util/util');
 
 module.exports = new LogCommand(
 	'timestats',
@@ -10,7 +9,7 @@ module.exports = new LogCommand(
 	'timestats',
 	'timestats',
 	async (message) => {
-		if (!config.options.enable_log_command) {
+		if (!config.get('options.enable_log_command')) {
 			message.channel.send("Everyone's hours have been reset to 0.");
 			return;
 		}
@@ -44,22 +43,18 @@ module.exports = new LogCommand(
 			median = hoursList[(n - 1) / 2];
 		}
 
-		let standDev = 0;
-		for (const a of hoursList) {
-			standDev += (a - mean) ** 2;
-		}
-		standDev = Math.sqrt(standDev / n);
+		const standDev = Math.sqrt(hoursList.reduce((sum, val) => sum + (val - mean) ** 2) / n);
 
-		const embed = new discord.RichEmbed()
+		const embed = new discord.MessageEmbed()
 			.setColor(0x0ac12c)
-			.setTitle(`Hours statistics as of ${Command.getTime()}`)
+			.setTitle(`Hours statistics as of ${getTime()}`)
 			.addField('N', `${n} members`, true)
 			.addField('Total time', `${Math.round(totalTime / 360) / 10} person-hours`, true)
 			.addField('Median time', `${Math.round(median / 360) / 10} hours`, true)
 			.addField('Mean time', `${Math.round(mean / 360) / 10} hours`, true)
 			.addField('Standard deviation', `${Math.round(standDev / 360) / 10} hours`, true)
 			.setTimestamp()
-			.setFooter(`Calculated for ${Command.getAuthorNickname(message)}`);
+			.setFooter(`Calculated for ${await getAuthorNickname(message)}`);
 
 		message.channel.send({ embed });
 	},

@@ -7,7 +7,7 @@ module.exports = new Command(
 	'ping',
 	'ping',
 	(message) => {
-		const ping = Math.round(Command.bot.ping); // in ms
+		const ping = Math.round(Command.bot.ws.ping); // in ms
 
 		let color = 0xF62828; // red: high ping
 		if (ping < 50) {
@@ -16,7 +16,7 @@ module.exports = new Command(
 			color = 0xBDC304; // yellow: ok ping
 		}
 
-		const embed = new discord.RichEmbed()
+		const embed = new discord.MessageEmbed()
 			.setColor(color)
 			.setDescription(`${ping} ms`);
 		message.channel.send({ embed });

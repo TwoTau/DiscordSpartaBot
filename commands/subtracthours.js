@@ -3,15 +3,15 @@ const moment = require('moment');
 const Command = require('../command');
 const LogCommand = require('../logcommand');
 const signinHelper = require('../util/signinHelper');
-const config = require('../config.json');
+const { config, send, reply, isAuthorAdmin, getAuthorNickname } = require('../util/util');
 
 module.exports = new LogCommand(
 	'subtracthours',
 	'Will subtract specified time from the person chosen. Can only be used by build leads. Subtract 0:00 hours to override the previous subtraction.',
 	'subtracthours "<name of person>" "<time in h:mm format (has to be between 0:01 and 23:59>" "<optional date in M/D format>"',
 	'subtracthours "Firstname Lastname" "3:30"',
-	(message, content) => {
-		if (!Command.isAuthorAdmin(message)) { // author is not an admin
+	async (message, content) => {
+		if (!isAuthorAdmin(message)) { // author is not an admin
 			message.reply('Only admins can use this command.');
 			return;
 		}
@@ -30,11 +30,11 @@ module.exports = new LogCommand(
 					if (argumentList.length > 2) { // date specified
 						date = moment(argumentList[2] + moment().format('/YY'), 'M/D/YY');
 						if (!date.isValid()) {
-							message.reply(`${argumentList[2]} is not a valid date in month/date format. ${moment().format('M/D')} is an example of a correct date.`);
+							reply(message, `${argumentList[2]} is not a valid date in month/date format. ${moment().format('M/D')} is an example of a correct date.`);
 							return;
 						}
 						if (!moment().isAfter(date)) {
-							message.reply(`${argumentList[2]} must be in the past. Make sure the date is in M/D format.`);
+							reply(message, `${argumentList[2]} must be in the past. Make sure the date is in M/D format.`);
 							return;
 						}
 					} else { // date not specified
@@ -50,13 +50,13 @@ module.exports = new LogCommand(
 					// subtract hours from the Firebase sign-in database
 					const updates = {};
 					updates[date.format('YY-MM-DD')] = hoursToSubtract;
-					const removalMessage = `**${Command.getAuthorNickname(message)}** removed ${hoursToSubtract} (=${minutesToSubtract} minutes) from **${user.name}** for the date ${date.format('MMM D')}.`;
+					const removalMessage = `**${await getAuthorNickname(message)}** removed ${hoursToSubtract} (=${minutesToSubtract} minutes) from **${user.name}** for the date ${date.format('MMM D')}.`;
 					LogCommand.db.ref(`log/${user.name}/subtract`).update(updates, () => {
-						message.channel.send(removalMessage);
+						send(message.channel, removalMessage);
 					});
 
 					// send data to the subtracthours Discord webhook
-					axios.post(config.hours_log_webhook_url, {
+					axios.post(config.get('hours_log_webhook_url'), {
 						content: removalMessage,
 					}).catch((error) => {
 						if (error.response) {
@@ -66,14 +66,14 @@ module.exports = new LogCommand(
 						}
 					});
 				} else { // time to subtract not within bounds
-					message.reply(`The maximum you can subtract is 23:59 from a person per day. ${hoursToSubtract} is not within the bounds.`);
+					reply(message, `The maximum you can subtract is 23:59 from a person per day. ${hoursToSubtract} is not within the bounds.`);
 				}
 			} else { // user does not exist
-				message.reply(`Sorry, I can't find "**${name}**" in the database. Make sure you spell it correctly.`);
+				reply(message, `Sorry, I can't find "**${name}**" in the database. Make sure you spell it correctly.`);
 			}
 		} else { // no argument or does not fit pattern, give error message
-			const command = `${config.options.prefix}subtracthours`;
-			message.reply(`You need to specify the person's name and the hours to subtract from them, both in quotation marks. E.g.\n\`\`\`${command} "Full Name" "2:55"\`\`\` or if you specify date to subtract from (in M/D format): \`\`\`${command} "Full Name" "4:10" "1/6"\`\`\``);
+			const command = `${config.get('options.prefix')}subtracthours`;
+			reply(message, `You need to specify the person's name and the hours to subtract from them, both in quotation marks. E.g.\n\`\`\`${command} "Full Name" "2:55"\`\`\` or if you specify date to subtract from (in M/D format): \`\`\`${command} "Full Name" "4:10" "1/6"\`\`\``);
 		}
 	},
 );

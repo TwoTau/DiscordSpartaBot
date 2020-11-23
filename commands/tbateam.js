@@ -2,11 +2,13 @@ const axios = require('axios');
 const discord = require('discord.js');
 const moment = require('moment');
 const Command = require('../command');
-const config = require('../config.json');
+const { send, config } = require('../util/util');
+
+const MAX_TEAM_NUMBER = 9000;
 
 const authParams = {
 	params: {
-		'X-TBA-Auth-Key': config.tba_auth_key,
+		'X-TBA-Auth-Key': config.get('tba_auth_key'),
 	},
 };
 
@@ -53,7 +55,6 @@ async function addEventsToEmbed(embed, teamNumber) {
 			}
 
 			embed.addField('Events', eventsAsString, false);
-			// resolve(embed);
 		}
 	}).catch(handleTBAApiError);
 }
@@ -64,7 +65,7 @@ async function makeEmbed(data) {
 	const location = data.city ? `${data.city}, ${data.state_prov}` : 'unknown';
 	const nickname = data.nickname || '';
 
-	const embed = new discord.RichEmbed()
+	const embed = new discord.MessageEmbed()
 		.setTitle(`FRC Team ${teamNumber}: ${nickname}`)
 		.setURL(`https://www.thebluealliance.com/team/${data.team_number}`)
 		.setColor(0x12C40F)
@@ -85,31 +86,35 @@ async function makeEmbed(data) {
 module.exports = new Command(
 	'tbateam',
 	'Will give you information about a team given the team number.',
-	'tbateam <teamnumber t where t ∈ ℤ ∩ [1,8000]>',
+	`tbateam <teamnumber t where t ∈ ℤ ∩ [1,${MAX_TEAM_NUMBER}]>`,
 	'tbateam 2976',
 	(message, content) => {
 		if (!content) { // no parameter
-			message.channel.send('You need to specify a team number (1-8000).');
+			message.channel.send(`You need to specify a team number (1-${MAX_TEAM_NUMBER}).`);
 			return;
 		}
 
 		const teamNumber = +content;
 
-		if (teamNumber > 0 && teamNumber <= 8000) { // parameter is valid
+		if (teamNumber > 0 && teamNumber <= MAX_TEAM_NUMBER) { // parameter is valid
+			message.channel.startTyping(); // loading indicator
+
 			// send a request to TheBlueAlliance's API for team information
 			axios.get(`http://www.thebluealliance.com/api/v3/team/frc${teamNumber}`, authParams).then((response) => {
 				makeEmbed(response.data).then((embed) => {
 					message.channel.send({ embed });
+					message.channel.stopTyping();
 				});
 			}).catch((error) => {
 				if (error.response && error.response.status === 404) {
-					message.channel.send(`Team ${teamNumber} doesn't exist. This is because FRC leaves some numbers unassigned.`);
+					send(message.channel, `Team ${teamNumber} doesn't exist. This is because FRC leaves some numbers unassigned.`);
 				} else {
 					handleTBAApiError(error);
 				}
+				message.channel.stopTyping();
 			});
 		} else { // parameter is not valid
-			message.channel.send(`${content} is not a number between 1-8000.`);
+			send(message.channel, `${content} isn't a number between 1-${MAX_TEAM_NUMBER}.`);
 		}
 	},
 );

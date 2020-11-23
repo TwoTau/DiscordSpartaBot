@@ -1,14 +1,14 @@
 const discord = require('discord.js');
 const moment = require('moment');
 const Command = require('../command');
-const config = require('../config.json');
+const { send, config } = require('../util/util');
 
 module.exports = new Command(
 	'info',
 	'Will give you info about the mentioned member or yourself.',
 	'info <optional mentioned member>',
 	'info',
-	(message, args) => {
+	async (message, args) => {
 		const mentionedMembers = message.mentions.members;
 		let member;
 		const content = args.trim();
@@ -18,17 +18,20 @@ module.exports = new Command(
 			member = mentionedMembers.first();
 		} else { // there is content
 			const displayNameClean = content.trim().toLowerCase();
-			const possibleMember = message.guild.members.find(mem => mem.displayName.toLowerCase() === displayNameClean);
+			const possibleMember = (await message.guild.members.fetch({
+				query: displayNameClean,
+				limit: 1,
+			})).first();
+
 			if (possibleMember) {
 				member = possibleMember;
 			} else {
-				message.channel.send(`I don't think "${content}" is a mentioned user or a username. To mention someone, type @, then select the their name. If you want your own info, do just \`${config.options.prefix}info\`.`);
+				send(message.channel, `I don't think "${content}" is a mentioned user or a username. To mention someone, type @ and select their name. For your own info, try \`${config.get('options.prefix')}info\`.`);
 				return;
 			}
 		}
 
-		const memberAvatarUrl = member.user.displayAvatarURL;
-		const userGame = member.user.presence.game;
+		const memberAvatarUrl = member.user.displayAvatarURL();
 		let onlineStatus = member.user.presence.status;
 		if (onlineStatus === 'dnd') {
 			onlineStatus = 'Do not disturb';
@@ -38,20 +41,22 @@ module.exports = new Command(
 
 		const dateTimeFormat = 'MMM D, YYYY @ h:mm a';
 
-		const embed = new discord.RichEmbed()
+		const embed = new discord.MessageEmbed()
 			.setAuthor(member.user.tag, memberAvatarUrl)
-			.setColor(member.displayColor)
 			.setThumbnail(memberAvatarUrl)
 			.addField('Nickname', member.displayName, true)
 			.addField('ID', member.id, true)
 			.addField('Status', onlineStatus, true)
-			.addField('Game', (userGame) ? userGame.name : '_none_', true)
 			.addField('Account created',
 				moment(member.user.createdAt).format(dateTimeFormat), true)
 			.addField('Joined server',
 				moment(member.joinedAt).format(dateTimeFormat), true)
-			.addField('Roles', member.roles.size - 1, true)
-			.addField('Highest role', member.highestRole.name, true);
+			.addField('Roles', member.roles.cache.size - 1, true)
+			.addField('Highest role', member.roles.highest.name, true);
+
+		if (member.displayColor) {
+			embed.setColor(member.displayColor);
+		}
 
 		message.channel.send({ embed });
 	},

@@ -1,3 +1,4 @@
+/* eslint-disable no-unused-vars */
 const axios = require('axios');
 const discord = require('discord.js');
 const moment = require('moment');
@@ -5,7 +6,7 @@ const util = require('util');
 const Command = require('../command');
 const LogCommand = require('../logcommand');
 const signinHelper = require('../util/signinHelper');
-const config = require('../config.json');
+const { send, config, isAuthorBotCreator } = require('../util/util');
 
 function cleanResult(text) {
 	return text.replace(/`/g, `\`${String.fromCharCode(8203)}`).replace(/@/g, `@${String.fromCharCode(8203)}`);
@@ -17,12 +18,13 @@ module.exports = new Command(
 	'just don\'t',
 	':regional_indicator_n: :o2:',
 	(message, content) => {
-		if (!(Command.isAuthorBotCreator(message) && config.options.allow_eval_command)) {
+		if (!isAuthorBotCreator(message) || !config.get('options.allow_eval_command')) {
 			message.channel.send(':expressionless: :regional_indicator_n: :o2: :unamused:');
 			return;
 		}
 
 		try {
+			// eslint-disable-next-line no-eval
 			let evaled = eval(content);
 			if (typeof (evaled) !== 'string') {
 				evaled = util.inspect(evaled);
@@ -39,7 +41,7 @@ module.exports = new Command(
 			if (typeof (error) === 'string') {
 				errText = cleanResult(error);
 			}
-			message.channel.send(`\`ERROR\` \`\`\`xl\n${errText}\n\`\`\``);
+			send(message.channel, `\`ERROR\` \`\`\`xl\n${errText}\n\`\`\``);
 		}
 	},
 );

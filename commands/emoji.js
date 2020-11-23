@@ -1,21 +1,28 @@
 const Command = require('../command');
+const { send, config } = require('../util/util');
+
+const MAX_EMOJIS = 20;
 
 module.exports = new Command(
 	'emoji',
 	'Sends an animated emoji. Only works with animated emoji.',
-	'emoji <animated emoji name> <optional number to repeat 1-10>',
+	`emoji <animated emoji name> <optional number to repeat 1-${MAX_EMOJIS}>`,
 	'emoji yeet 5',
 	(message, args) => {
 		const argsWords = args.split(' ');
-		message.delete();
-		const animatedEmojis = message.guild.emojis.filter(r => r.animated);
-		const emoji = animatedEmojis.find('name', argsWords[0]);
+		const animatedEmojis = message.guild.emojis.cache.filter((r) => r.animated);
+		const emoji = animatedEmojis.find((r) => r.name === argsWords[0]);
 		if (emoji) {
+			message.delete();
 			let numEmojis = +argsWords[1];
-			if (argsWords.length < 2 || !(numEmojis >= 1 && numEmojis <= 10)) {
+			if (argsWords.length < 2 || !(numEmojis >= 1 && numEmojis <= MAX_EMOJIS)) {
 				numEmojis = 1;
 			}
-			message.channel.send(emoji.toString().repeat(numEmojis));
+			send(message.channel, emoji.toString().repeat(numEmojis));
+		} else {
+			const randomEmoji = animatedEmojis.random()?.name || '';
+			const emojiString = animatedEmojis.map((r) => r.toString()).join(' ');
+			send(message.channel, `Animated emojis you can use are: ${emojiString}. Try \`${config.get('options.prefix')}emoji ${randomEmoji}\``);
 		}
 	},
 );

@@ -1,6 +1,6 @@
 const firebaseAdmin = require('firebase-admin');
 const Command = require('./command');
-const config = require('./config.json');
+const { config } = require('./util/util');
 const accountKey = require('./serviceAccountKey.json');
 
 module.exports = class LogCommand extends Command {
@@ -10,7 +10,7 @@ module.exports = class LogCommand extends Command {
 	static initialize() {
 		firebaseAdmin.initializeApp({
 			credential: firebaseAdmin.credential.cert(accountKey),
-			databaseURL: config.firebase_db_url,
+			databaseURL: config.get('firebase_db_url'),
 		});
 
 		// database contains member sign in and outs

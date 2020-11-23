@@ -1,5 +1,6 @@
 const discord = require('discord.js');
 const moment = require('moment');
+const { send } = require('./util');
 
 function padStart(originalString, targetLength, padString = '0') {
 	return (String(originalString)).padStart(targetLength, padString);
@@ -118,6 +119,7 @@ module.exports = {
 				return {
 					name: fullName,
 					data: allMembers[fullName],
+					groups: allMembers[fullName].groups.split(' '),
 				};
 			}
 		}
@@ -130,6 +132,7 @@ module.exports = {
 				return {
 					name: fullName,
 					isBoardMember: allMembers[fullName].board,
+					groups: allMembers[fullName].groups.split(' '),
 				};
 			}
 		}
@@ -137,7 +140,7 @@ module.exports = {
 	},
 
 	// sendFullTimeTable must be either false, "in direct message", "in same channel"
-	async sendUserLog(db, message, fullName, isBoardMember, sendFullTimeTable = false) {
+	async sendUserLog(db, message, fullName, groups, sendFullTimeTable = false) {
 		const data = (await db.ref(`log/${fullName}`).once('value')).val();
 		let log;
 		let totalTimeInSec;
@@ -147,16 +150,23 @@ module.exports = {
 		} else { // member has never signed in
 			totalTimeInSec = 0;
 		}
-		const timeNeededInSec = (isBoardMember ? 288000 : 144000);
+
+		const isBoardMember = groups.includes('board');
+		let timeNeededInSec = 3600 * 40;
+		if (isBoardMember) {
+			timeNeededInSec = 3600 * 80;
+		} else if (groups.includes('nonmember')) {
+			timeNeededInSec = 3600 * 60;
+		}
 		const timeLeftFormatted = ((timeNeededInSec > totalTimeInSec) ? secondsToFormattedTime(timeNeededInSec - totalTimeInSec) : ':zero:');
 
 		if (totalTimeInSec > 0) { // user has spent time
 			const { formattedTime, loggedIn, table } = log;
 
-			const percentagePieChart = Math.round(totalTimeInSec / timeNeededInSec * 100);
+			const percentagePieChart = Math.round((totalTimeInSec / timeNeededInSec) * 100);
 			const pieChartColor = (timeNeededInSec > totalTimeInSec) ? 'E26212' : '04C30E';
 
-			const embed = new discord.RichEmbed()
+			const embed = new discord.MessageEmbed()
 				.setColor(isBoardMember ? 0x137CB8 : 0xCCCCCC)
 				.setThumbnail(`https://quickchart.io/chart?c={type:%27radialGauge%27,options:{roundedCorners:false,centerPercentage:65,centerArea:{fontColor:%22rgb(200,200,200)%22}},data:{datasets:[{data:[${percentagePieChart}],backgroundColor:%22%23${pieChartColor}%22}]}}&w=256&h=256`)
 				.addField('Board', (isBoardMember ? 'Yes' : 'No'), true)
@@ -165,16 +175,16 @@ module.exports = {
 			message.channel.send({ embed });
 
 			if (sendFullTimeTable === 'in same channel') {
-				message.channel.send(`\`\`\`diff\n${table}\`\`\``);
+				send(message.channel, `\`\`\`diff\n${table}\`\`\``);
 			} else if (sendFullTimeTable === 'in direct message') {
 				message.author.send(`Your log:\n\`\`\`diff\n${table}\`\`\``).then(() => {
-					message.channel.send('Check your DMs. I sent you your full timelog.');
+					message.channel.send('Check your DMs. I sent you your full time log.');
 				}).catch(() => {
-					message.channel.send("I tried to send you a DM with your full timelog, but there was an error. :unamused: It's possible that you blocked me or don't allow DMs from me.");
+					message.channel.send("I tried to send you a DM with your full time log, but there was an error. :unamused: It's possible that you blocked me or don't allow DMs from me.");
 				});
 			}
 		} else { // user has not spent any time
-			const embed = new discord.RichEmbed()
+			const embed = new discord.MessageEmbed()
 				.setColor(0xF62828)
 				.setDescription(`**${fullName}** is not logged in and has :zero: **hours**. They still need to log **${timeLeftFormatted}**.`);
 			message.channel.send({ embed });
@@ -184,14 +194,16 @@ module.exports = {
 	async getCorrections(db) {
 		const corrections = (await db.ref('corrections').once('value')).val();
 		const toReturn = [];
-		for (const name of Object.keys(corrections)) {
-			for (const submittedTime of Object.keys(corrections[name])) {
-				toReturn.push({
-					name,
-					request: corrections[name][submittedTime].request,
-					date: corrections[name][submittedTime].date,
-					submitted: moment(submittedTime),
-				});
+		if (corrections) {
+			for (const name of Object.keys(corrections)) {
+				for (const submittedTime of Object.keys(corrections[name])) {
+					toReturn.push({
+						name,
+						request: corrections[name][submittedTime].request,
+						date: corrections[name][submittedTime].date,
+						submitted: moment(submittedTime),
+					});
+				}
 			}
 		}
 		return toReturn;

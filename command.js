@@ -1,5 +1,4 @@
-const moment = require('moment');
-const config = require('./config.json');
+const { config, send } = require('./util/util');
 
 module.exports = class Command {
 	/**
@@ -28,62 +27,23 @@ module.exports = class Command {
 	}
 
 	/**
-	 * Returns the time in a friendly format
-	 *
-	 * @returns {string} Date in M/DD h:mm a format
-	 */
-	static getTime() {
-		return moment().format('M/DD h:mm a');
-	}
-
-	/**
 	 * Sends text to the default debug channel, if it exists
 	 *
 	 * @param {string} text
 	 * @returns {?Promise} Sending the message resolves with success or failure
 	 */
-	static debug(text) {
+	static async debug(text) {
 		// eslint-disable-next-line no-console
 		console.log(text);
-		const debugChannel = Command.bot.channels.get(config.debug_channel_id);
-		if (debugChannel) {
-			debugChannel.send(text);
+		let clean = text;
+		if (text === undefined) {
+			clean = '<undefined>';
+		} else if (text === null) {
+			clean = '<null>';
+		} else if (text === '') {
+			clean = '<empty string \'\'>';
 		}
-	}
-
-	/**
-	 * Checks whether the author of the message is the bot creator
-	 *
-	 * @param {Message} message
-	 * @returns {boolean}
-	 */
-	static isAuthorBotCreator(message) {
-		return message.author.id === config.bot_creator;
-	}
-
-	/**
-	 * Returns whether the message author has the admin role or is the bot creator
-	 *
-	 * @param {Message} message
-	 * @returns {boolean}
-	 */
-	static isAuthorAdmin(message) {
-		const isAdmin = message.member.roles.has(config.admin_role);
-		return isAdmin || this.isAuthorBotCreator(message);
-	}
-
-	/**
-	 * Returns the display name or nickname of the message's author
-	 *
-	 * @param {Message} message
-	 * @returns {string} the author's display name, or if not available,
-	 *                   the author's nickname
-	 */
-	static getAuthorNickname(message) {
-		if (message.member) {
-			return message.member.displayName;
-		}
-		const { nickname } = message.guild.members.get(message.author.id);
-		return (nickname || message.author.username);
+		const debugChannel = await Command.bot.channels.fetch(config.get('debug_channel_id'));
+		return debugChannel ? send(debugChannel, clean) : null;
 	}
 };
