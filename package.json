@@ -18,7 +18,7 @@
 		"start": "node bot.js"
 	},
 	"dependencies": {
-		"axios": "^0.21.0",
+		"axios": "^0.21.1",
 		"discord.js": "^12.5.0",
 		"firebase-admin": "^9.4.0",
 		"moment": "^2.29.1",
