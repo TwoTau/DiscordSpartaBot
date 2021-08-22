@@ -26,7 +26,7 @@ async function sendReqs(memberName, channel, sendFullData = false) {
 		}
 	}
 
-	channel.send({ embed });
+	channel.send({ embeds: [embed] });
 }
 
 module.exports = new LogCommand(

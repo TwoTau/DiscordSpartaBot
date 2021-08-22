@@ -23,40 +23,49 @@ function handleTBAApiError(error) {
 }
 
 async function addAwardsToEmbed(embed, teamNumber) {
-	return axios.get(`http://www.thebluealliance.com/api/v3/team/frc${teamNumber}/awards`, authParams).then((response) => {
-		let numAwardsWon = response.data.length;
-		if (response.data.length > 0) {
-			const latest = response.data[response.data.length - 1].event_key;
-			numAwardsWon += ` (latest [${latest}](https://www.thebluealliance.com/event/${latest}))`;
-		} else {
-			numAwardsWon += ' (yet)';
-		}
-		embed.addField('Awards won', numAwardsWon, true);
-		// resolve(embed);
-	}).catch(handleTBAApiError);
+	let response;
+	try {
+		response = await axios.get(`http://www.thebluealliance.com/api/v3/team/frc${teamNumber}/awards`, authParams);
+	} catch (error) {
+		handleTBAApiError(error);
+		return;
+	}
+
+	let numAwardsWon = '0 (yet)';
+	if (response.data.length > 0) {
+		const latest = response.data[response.data.length - 1].event_key;
+		numAwardsWon = `${response.data.length} (latest [${latest}](https://www.thebluealliance.com/event/${latest}))`;
+	}
+	embed.addField('Awards won', numAwardsWon, true);
 }
 
-function sortDates(a, b) {
+function compareDates(a, b) {
 	return moment(a.start_date, API_DATE_FORMAT).isAfter(moment(b.start_date, API_DATE_FORMAT)) ? -1 : 1;
 }
 
 async function addEventsToEmbed(embed, teamNumber) {
-	return axios.get(`http://www.thebluealliance.com/api/v3/team/frc${teamNumber}/events/simple`, authParams).then((response) => {
-		if (response.data.length > 0) {
-			// get 5 most recent events
-			const mostRecentEvents = response.data.sort(sortDates).slice(0, 5).map((event) => {
-				const date = moment(event.start_date, API_DATE_FORMAT).format('MM/DD/YYYY');
-				return `[\`${date}\` - ${event.name}](https://www.thebluealliance.com/event/${event.key})`;
-			});
+	let response;
+	try {
+		response = await axios.get(`http://www.thebluealliance.com/api/v3/team/frc${teamNumber}/events/simple`, authParams);
+	} catch (error) {
+		handleTBAApiError(error);
+		return;
+	}
 
-			let eventsAsString = mostRecentEvents.join('\n');
-			if (mostRecentEvents.length === 5) {
-				eventsAsString += `\n...and ${response.data.length - 5} more`;
-			}
+	if (response.data.length > 0) {
+		// get 5 most recent events
+		const mostRecentEvents = response.data.sort(compareDates).slice(0, 5).map((event) => {
+			const date = moment(event.start_date, API_DATE_FORMAT).format('MM/DD/YYYY');
+			return `[\`${date}\` - ${event.name}](https://www.thebluealliance.com/event/${event.key})`;
+		});
 
-			embed.addField('Events', eventsAsString, false);
+		let eventsAsString = mostRecentEvents.join('\n');
+		if (response.data.length > mostRecentEvents.length) {
+			eventsAsString += `\n...and ${response.data.length - 5} more`;
 		}
-	}).catch(handleTBAApiError);
+
+		embed.addField('Events', eventsAsString, false);
+	}
 }
 
 async function makeEmbed(data) {
@@ -69,12 +78,12 @@ async function makeEmbed(data) {
 		.setTitle(`FRC Team ${teamNumber}: ${nickname}`)
 		.setURL(`https://www.thebluealliance.com/team/${data.team_number}`)
 		.setColor(0x12C40F)
-		.addField('Team number', teamNumber, true)
+		.addField('Team number', `${teamNumber}`, true)
 		.addField('Nickname', nickname, true)
 		.addField('Location', location, true)
 		.addField('Motto', motto, true)
 		.addField('Website', data.website || '_none_', true)
-		.addField('Rookie year', data.rookie_year, true);
+		.addField('Rookie year', `${data.rookie_year}`, true);
 
 	await addAwardsToEmbed(embed, teamNumber);
 
@@ -88,7 +97,7 @@ module.exports = new Command(
 	'Will give you information about a team given the team number.',
 	`tbateam <teamnumber t where t ∈ ℤ ∩ [1,${MAX_TEAM_NUMBER}]>`,
 	'tbateam 2976',
-	(message, content) => {
+	async (message, content) => {
 		if (!content) { // no parameter
 			message.channel.send(`You need to specify a team number (1-${MAX_TEAM_NUMBER}).`);
 			return;
@@ -97,22 +106,20 @@ module.exports = new Command(
 		const teamNumber = +content;
 
 		if (teamNumber > 0 && teamNumber <= MAX_TEAM_NUMBER) { // parameter is valid
-			message.channel.startTyping(); // loading indicator
+			message.channel.sendTyping(); // loading indicator
 
 			// send a request to TheBlueAlliance's API for team information
-			axios.get(`http://www.thebluealliance.com/api/v3/team/frc${teamNumber}`, authParams).then((response) => {
-				makeEmbed(response.data).then((embed) => {
-					message.channel.send({ embed });
-					message.channel.stopTyping();
-				});
-			}).catch((error) => {
-				if (error.response && error.response.status === 404) {
+			try {
+				const response = await axios.get(`http://www.thebluealliance.com/api/v3/team/frc${teamNumber}`, authParams);
+				const embed = await makeEmbed(response.data);
+				message.channel.send({ embeds: [embed] });
+			} catch (error) {
+				if (error.response?.status === 404) {
 					send(message.channel, `Team ${teamNumber} doesn't exist. This is because FRC leaves some numbers unassigned.`);
 				} else {
 					handleTBAApiError(error);
 				}
-				message.channel.stopTyping();
-			});
+			}
 		} else { // parameter is not valid
 			send(message.channel, `${content} isn't a number between 1-${MAX_TEAM_NUMBER}.`);
 		}

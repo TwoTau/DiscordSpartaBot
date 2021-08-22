@@ -172,7 +172,7 @@ module.exports = {
 				.addField('Board', (isBoardMember ? 'Yes' : 'No'), true)
 				.addField('Hours needed', timeLeftFormatted, true)
 				.setDescription(`**${fullName}** is currently **${loggedIn ? '' : 'not '}logged in**. They have **${formattedTime}** hours.`);
-			message.channel.send({ embed });
+			message.channel.send({ embeds: [embed] });
 
 			if (sendFullTimeTable === 'in same channel') {
 				send(message.channel, `\`\`\`diff\n${table}\`\`\``);
@@ -187,7 +187,7 @@ module.exports = {
 			const embed = new discord.MessageEmbed()
 				.setColor(0xF62828)
 				.setDescription(`**${fullName}** is not logged in and has :zero: **hours**. They still need to log **${timeLeftFormatted}**.`);
-			message.channel.send({ embed });
+			message.channel.send({ embeds: [embed] });
 		}
 	},
 

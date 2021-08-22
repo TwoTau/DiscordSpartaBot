@@ -52,7 +52,8 @@ class ConfigManager {
 	/**
 	 * Returns the value at the given key. Omit key to get the entire config.
 	 * @param {string?} key Property to find, use period (.) for nesting
-	 * @returns {any} Value associated with the key.
+	 * @returns {any} Value associated with the key
+	 * @throws {ReferenceError} if key represents an invalid path
 	 */
 	get(key) {
 		let value = this.data;
@@ -60,6 +61,8 @@ class ConfigManager {
 			for (const nextKey of key.split('.')) {
 				if (value) {
 					value = value[nextKey];
+				} else {
+					throw new ReferenceError(`Cannot find property ${nextKey} in ${key}`);
 				}
 			}
 		}

@@ -19,6 +19,6 @@ module.exports = new Command(
 		const embed = new discord.MessageEmbed()
 			.setColor(color)
 			.setDescription(`${ping} ms`);
-		message.channel.send({ embed });
+		message.channel.send({ embeds: [embed] });
 	},
 );

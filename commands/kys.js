@@ -15,7 +15,7 @@ module.exports = new Command(
 
 		await Promise.all([
 			message.channel.send(':scream: Shutting down :skull:'),
-			Command.debug('Shutting down from kys'),
+			Command.debug('Shutting down from `kys`'),
 		]);
 		await Command.bot.destroy();
 		process.exit();

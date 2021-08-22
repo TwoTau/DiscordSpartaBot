@@ -6,7 +6,7 @@ const util = require('util');
 const Command = require('../command');
 const LogCommand = require('../logcommand');
 const signinHelper = require('../util/signinHelper');
-const { send, config, isAuthorBotCreator } = require('../util/util');
+const { send, config, isAuthorBotCreator, reply, getAuthorNickname } = require('../util/util');
 
 function cleanResult(text) {
 	return text.replace(/`/g, `\`${String.fromCharCode(8203)}`).replace(/@/g, `@${String.fromCharCode(8203)}`);

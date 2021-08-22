@@ -21,7 +21,7 @@ module.exports = new LogCommand(
 
 		for (const fullName of Object.keys(LogCommand.memberNameList)) {
 			const memberLog = data[fullName];
-			if (memberLog && memberLog.meetings) {
+			if (memberLog?.meetings) {
 				const log = signinHelper.getTimeLog(memberLog.meetings,
 					memberLog.subtract, false);
 				if (log.totalTime / 3600 < 1000 && log.totalTime > 18000) {
@@ -43,7 +43,7 @@ module.exports = new LogCommand(
 			median = hoursList[(n - 1) / 2];
 		}
 
-		const standDev = Math.sqrt(hoursList.reduce((sum, val) => sum + (val - mean) ** 2) / n);
+		const standDev = Math.sqrt(hoursList.reduce((sum, val) => sum + (val - mean) ** 2, 0) / n);
 
 		const embed = new discord.MessageEmbed()
 			.setColor(0x0ac12c)
@@ -56,6 +56,6 @@ module.exports = new LogCommand(
 			.setTimestamp()
 			.setFooter(`Calculated for ${await getAuthorNickname(message)}`);
 
-		message.channel.send({ embed });
+		message.channel.send({ embeds: [embed] });
 	},
 );

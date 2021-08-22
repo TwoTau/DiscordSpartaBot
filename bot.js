@@ -1,5 +1,6 @@
 /* eslint-disable global-require */
 const discord = require('discord.js');
+const fs = require('fs').promises;
 const moment = require('moment');
 const stringSimilarity = require('string-similarity');
 const Command = require('./command');
@@ -7,10 +8,19 @@ const LogCommand = require('./logcommand');
 const { config, send, reply, getAuthorNickname } = require('./util/util');
 
 const bot = new discord.Client({
-	disableMentions: 'everyone',
-	ws: {
-		intents: ['GUILDS', 'GUILD_MEMBERS', 'GUILD_MESSAGES', 'GUILD_EMOJIS', 'GUILD_PRESENCES', 'GUILD_MESSAGE_REACTIONS', 'DIRECT_MESSAGES'],
+	allowedMentions: {
+		parse: ['users', 'roles'],
+		repliedUser: true,
 	},
+	intents: [
+		discord.Intents.FLAGS.GUILDS,
+		discord.Intents.FLAGS.GUILD_MEMBERS,
+		discord.Intents.FLAGS.GUILD_MESSAGES,
+		discord.Intents.FLAGS.GUILD_EMOJIS_AND_STICKERS,
+		discord.Intents.FLAGS.GUILD_PRESENCES,
+		discord.Intents.FLAGS.GUILD_MESSAGE_REACTIONS,
+		discord.Intents.FLAGS.DIRECT_MESSAGES,
+	],
 });
 
 Command.bot = bot;
@@ -64,23 +74,32 @@ bot.on('guildMemberAdd', async (member) => {
 });
 
 // list of words meaning roughly hello in various languages
-const GREETING_WORDS = [
-	'ahlan', 'ahoj', 'akkam', 'allianchu', 'aloha', 'alo', 'anyoung', 'avuxeni', 'ayubowan', 'barev', 'bite',
-	'bonjou', 'bonjour', 'bonswa', 'chone tao', 'ciao', 'dobry den', 'god dag', 'goedendag', 'good morning',
-	'greetings', 'guten tag', 'habari', 'hallo', 'halloj', 'halo', 'hei', 'hej', 'hello', 'hey', 'hi', 'hola',
-	'hujambo', 'jambo', 'kaixo', 'kamusta', 'kedu', 'konnichiwa', 'kumno', 'marhaba', 'marhabaan', 'merhaba',
-	'mholweni', 'mhoro', 'mihofnima', 'msawa', 'muraho', 'namaskar', 'namaskara', 'namaste', 'ni hao', 'nihao',
-	'niltze', 'nǐ hǎo', 'ohayo', 'ola', 'parev', 'privet', 'salaam', 'salama', 'salom', 'salut', 'salve', 'sannu',
-	'sawasdee', 'sawubona', 'selam', 'selamat siang', 'shalom', 'shikamoo', 'sveiki', 'vanakkam', 'vandanalu',
-	'xin chao', 'xin chào', 'yasou', 'yassas', 'yaxshimusiz', 'yo', 'zdraveite', 'zdravo', 'zdravstvuyte',
-	'مرحبا', 'नमस्ते', '你好', '안녕',
-];
+let greetingWords = [];
+async function getGreetings() {
+	const GREETINGS_FILE = config.get('greetings_file');
+	let data = [];
+	if (GREETINGS_FILE) {
+		try {
+			data = (await fs.readFile(GREETINGS_FILE, 'utf-8')).split('\n');
+		} catch (error) {
+			// eslint-disable-next-line no-console
+			console.error(`Could not read from ${GREETINGS_FILE}: ${error.code}`);
+		}
+	} else {
+		// eslint-disable-next-line no-console
+		console.log('Greetings filed not specified.');
+	}
+	return data;
+}
+getGreetings().then((a) => {
+	greetingWords = a;
+});
 
-bot.on('message', async (message) => {
+bot.on('messageCreate', async (message) => {
 	const sender = message.author;
 
 	// only respond to real users and on text (non-DM) channels
-	if (sender.bot || message.channel.type !== 'text') {
+	if (sender.bot || message.channel.type !== 'GUILD_TEXT') {
 		return;
 	}
 
@@ -100,10 +119,10 @@ bot.on('message', async (message) => {
 		const sentReaction = await sent.react(CONFIRM_REACTION);
 
 		// 8 second period for user reaction
-		const collector = sent.createReactionCollector(
-			(reaction, user) => reaction.emoji.name === CONFIRM_REACTION && user.id === sender.id,
-			{ time: 8000 },
-		);
+		const collector = sent.createReactionCollector({
+			filter: (reaction, user) => reaction.emoji.name === CONFIRM_REACTION && user.id === sender.id,
+			time: 8000,
+		});
 
 		collector.on('collect', () => {
 			collector.stop('corrected');
@@ -133,7 +152,7 @@ bot.on('message', async (message) => {
 		reply(message, `Consider using a \`smile.amazon.com\` link instead to donate 0.5% to a charity: ${newText} :slight_smile:`);
 	}
 
-	const greetingWord = GREETING_WORDS.filter((greeting) => cleanContent === greeting || (cleanContent.includes(greeting) && cleanContent.includes(bot.user.username.toLowerCase())));
+	const greetingWord = greetingWords.filter((greeting) => cleanContent === greeting || (cleanContent.includes(greeting) && cleanContent.includes(bot.user.username.toLowerCase())));
 
 	if (cleanContent.length < 50 && greetingWord.length) {
 		const greeting = greetingWord[0][0].toUpperCase() + greetingWord[0].substr(1);
@@ -200,7 +219,7 @@ commands = [
 						embed.addField(prefix + command.usage, `${command.description}\n__Example__: \`${prefix + command.exampleUsage}\``, false);
 					}
 				}
-				message.channel.send({ embed });
+				message.channel.send({ embeds: [embed] });
 			} else { // there is an argument
 				const { command, confidence } = extractCommand(prefix + optionalArgument);
 				// show the command even if it is normally hidden from help
@@ -211,7 +230,7 @@ commands = [
 						.addField('Description', command.description)
 						.addField('Example', prefix + command.exampleUsage);
 
-					message.channel.send({ embed });
+					message.channel.send({ embeds: [embed] });
 				} else { // not a valid command
 					send(message.channel, `Command ${prefix + optionalArgument} does not exist. Try \`${prefix}help\` for a list of commands.`);
 				}

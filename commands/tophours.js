@@ -19,7 +19,7 @@ module.exports = new LogCommand(
 		const data = (await LogCommand.db.ref('log').once('value')).val();
 
 		let filterPromise;
-		if (content && content.toLowerCase() === 'include-board') {
+		if (content?.toLowerCase() === 'include-board') {
 			// promise resolves immediately with no filtered out names
 			filterPromise = new Promise((resolve) => {
 				resolve([]);

@@ -32,7 +32,7 @@ module.exports = new Command(
 		}
 
 		const memberAvatarUrl = member.user.displayAvatarURL();
-		let onlineStatus = member.user.presence.status;
+		let onlineStatus = member.user.presence?.status ?? 'Unknown';
 		if (onlineStatus === 'dnd') {
 			onlineStatus = 'Do not disturb';
 		} else if (onlineStatus === 'idle') {
@@ -51,13 +51,13 @@ module.exports = new Command(
 				moment(member.user.createdAt).format(dateTimeFormat), true)
 			.addField('Joined server',
 				moment(member.joinedAt).format(dateTimeFormat), true)
-			.addField('Roles', member.roles.cache.size - 1, true)
+			.addField('Roles', (member.roles.cache.size - 1).toString(), true)
 			.addField('Highest role', member.roles.highest.name, true);
 
 		if (member.displayColor) {
 			embed.setColor(member.displayColor);
 		}
 
-		message.channel.send({ embed });
+		message.channel.send({ embeds: [embed] });
 	},
 );

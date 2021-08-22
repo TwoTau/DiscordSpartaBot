@@ -24,12 +24,14 @@
 		"open_door_message": "This is an automated message. If the door to the school is locked, call the robotics room number at **000-000-0000** to get someone to open it."
 	},
 
+	"greetings_file": "greetings.txt",
+
 	"toggleable_roles": {
 		"SHORT ARGUMENT NAME 1": "ROLE ID",
 		"SHORT ARGUMENT NAME 2": "ROLE ID",
 		"SHORT ARGUMENT NAME 3": "ROLE ID"
 	},
-	
+
 	"events": {
 		"SHORT ARGUMENT NAME 1": {
 			"name": "EVENT NAME",

@@ -14,7 +14,7 @@ function sendCorrectionsInMessages(channel, corrections, correctionsPerMessage) 
 			const { name, submitted, request, date } = corrections[i];
 			embed.addField(`**${name}** @ (${submitted.format('M/D h:mm a')})`, `\`[${date}]\` - ${request}`);
 		}
-		channel.send({ embed });
+		channel.send({ embeds: [embed] });
 	}
 }
 

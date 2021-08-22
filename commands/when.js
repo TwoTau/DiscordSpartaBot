@@ -29,7 +29,7 @@ module.exports = new Command(
 			for (const eventArg of allowedEventNames) {
 				addEventInfoToEmbed(eventArg, embed);
 			}
-			message.channel.send({ embed });
+			message.channel.send({ embeds: [embed] });
 			return;
 		}
 
@@ -37,7 +37,7 @@ module.exports = new Command(
 		if (allowedEventNames.includes(args)) {
 			const embed = new discord.MessageEmbed().setColor(0x0ac12c);
 			addEventInfoToEmbed(args, embed);
-			message.channel.send({ embed });
+			message.channel.send({ embeds: [embed] });
 		} else {
 			send(message.channel, `Sorry, I don't know when that event is. Maybe you mean something in this list: ${allowedEventNamesAsList}.`);
 		}
