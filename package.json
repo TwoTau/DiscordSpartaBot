@@ -14,21 +14,28 @@
 	},
 	"main": "bot.js",
 	"scripts": {
+		"tsc": "tsc",
 		"test": "eslint --ignore-path .gitignore .",
-		"start": "node bot.js"
+		"build": "npm run tsc",
+		"start": "node build/bot.js"
 	},
 	"dependencies": {
 		"axios": "^0.21.1",
 		"discord.js": "^13.1.0",
-		"firebase-admin": "^9.7.0",
+		"firebase-admin": "^9.11.1",
 		"moment": "^2.29.1",
+		"source-map-support": "^0.5.19",
 		"string-similarity": "^4.0.4"
 	},
 	"devDependencies": {
+		"@types/string-similarity": "^4.0.0",
+		"@typescript-eslint/eslint-plugin": "^4.29.3",
+		"@typescript-eslint/parser": "^4.29.3",
 		"babel-eslint": "^10.1.0",
-		"eslint": "^7.26.0",
+		"eslint": "^7.32.0",
 		"eslint-config-airbnb-base": "^14.2.1",
-		"eslint-plugin-import": "^2.22.1"
+		"eslint-plugin-import": "^2.24.2",
+		"typescript": "^4.4.2"
 	},
 	"volta": {
 		"node": "16.7.0"

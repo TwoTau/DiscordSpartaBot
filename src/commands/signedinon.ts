@@ -1,6 +1,6 @@
-const moment = require('moment');
-const LogCommand = require('../logcommand');
-const { config, send, reply, isAuthorAdmin } = require('../util/util');
+import * as moment from 'moment';
+import LogCommand from '../logcommand';
+import { config, send, reply, isAuthorAdmin } from '../util/util';
 
 /**
  * Checks and returns whether the given member signed in on the given day.
@@ -8,12 +8,12 @@ const { config, send, reply, isAuthorAdmin } = require('../util/util');
  * @param {String} date Date to check
  * @return {Promise<String?>} member if signed in, else null
  */
-async function signedInOn(member, date) {
+async function signedInOn(member: string, date: string) {
 	const data = await LogCommand.db.ref(`log/${member}/meetings/${date}`).once('value');
 	return data.val() ? member : null;
 }
 
-module.exports = new LogCommand(
+const cmd = new LogCommand(
 	'signedinon',
 	'Will send a list of people signed in the specified date. Only admins can use this command.',
 	'signedinon <date in YYYY-MM-DD format>',
@@ -48,4 +48,6 @@ module.exports = new LogCommand(
 	},
 );
 
-module.exports.hideFromHelp();
+cmd.hideFromHelp();
+
+export default cmd;

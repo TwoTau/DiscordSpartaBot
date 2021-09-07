@@ -1,8 +1,8 @@
-const Command = require('../command');
-const { config, send, isAuthorBotCreator, isAuthorAdmin, getAuthorNickname } = require('../util/util');
+import Command from '../command';
+import { config, send, isAuthorBotCreator, isAuthorAdmin, getAuthorNickname } from '../util/util';
 
 // Shuffles the given array in place
-function shuffle(array) {
+function shuffle(array: unknown[]) {
 	for (let i = array.length - 1; i > 0; i--) {
 		const j = Math.floor(Math.random() * i);
 		const temp = array[i];
@@ -27,7 +27,7 @@ const dystopianQuotes = [
 shuffle(dystopianQuotes);
 let quoteIndex = 0;
 
-module.exports = new Command(
+export default new Command(
 	'purge',
 	'Will delete the past _n_ comments. This command can only be used by admins.',
 	'purge <number of messages n where n ∈ ℤ ∩ [1,100]>',

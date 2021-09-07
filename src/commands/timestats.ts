@@ -1,15 +1,15 @@
-const discord = require('discord.js');
-const LogCommand = require('../logcommand');
-const signinHelper = require('../util/signinHelper');
-const { config, getTime, getAuthorNickname } = require('../util/util');
+import { MessageEmbed } from 'discord.js';
+import LogCommand from '../logcommand';
+import { getTimeLog } from '../util/signinHelper';
+import { config, getTime, getAuthorNickname } from '../util/util';
 
-module.exports = new LogCommand(
+export default new LogCommand(
 	'timestats',
 	"Will calculate the some basic stats for everyone's hours.",
 	'timestats',
 	'timestats',
 	async (message) => {
-		if (!config.get('options.enable_log_command')) {
+		if (!(config.get('options.enable_log_command') as boolean)) {
 			message.channel.send("Everyone's hours have been reset to 0.");
 			return;
 		}
@@ -22,7 +22,7 @@ module.exports = new LogCommand(
 		for (const fullName of Object.keys(LogCommand.memberNameList)) {
 			const memberLog = data[fullName];
 			if (memberLog?.meetings) {
-				const log = signinHelper.getTimeLog(memberLog.meetings,
+				const log = getTimeLog(memberLog.meetings,
 					memberLog.subtract, false);
 				if (log.totalTime / 3600 < 1000 && log.totalTime > 18000) {
 					hoursList.push(log.totalTime);
@@ -45,7 +45,7 @@ module.exports = new LogCommand(
 
 		const standDev = Math.sqrt(hoursList.reduce((sum, val) => sum + (val - mean) ** 2, 0) / n);
 
-		const embed = new discord.MessageEmbed()
+		const embed = new MessageEmbed()
 			.setColor(0x0ac12c)
 			.setTitle(`Hours statistics as of ${getTime()}`)
 			.addField('N', `${n} members`, true)

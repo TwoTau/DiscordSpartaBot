@@ -1,12 +1,12 @@
-const discord = require('discord.js');
-const LogCommand = require('../logcommand');
-const signinHelper = require('../util/signinHelper');
-const { send, reply, isAuthorAdmin } = require('../util/util');
+import { MessageEmbed, TextBasedChannels } from 'discord.js';
+import LogCommand from '../logcommand';
+import { Correction, doesUserExist, getCorrections, UserExistOutput } from '../util/signinHelper';
+import { send, reply, isAuthorAdmin } from '../util/util';
 
-function sendCorrectionsInMessages(channel, corrections, correctionsPerMessage) {
+function sendCorrectionsInMessages(channel: TextBasedChannels, corrections: Correction[], correctionsPerMessage: number) {
 	for (let p = 0; p < corrections.length; p += correctionsPerMessage) {
 		const pageNum = `${(p / correctionsPerMessage) + 1}/${Math.ceil(corrections.length / correctionsPerMessage)}`;
-		const embed = new discord.MessageEmbed()
+		const embed = new MessageEmbed()
 			.setTitle(`Corrections (${pageNum})`)
 			.setColor(0xF62828);
 		const end = Math.min(p + correctionsPerMessage, corrections.length);
@@ -18,7 +18,7 @@ function sendCorrectionsInMessages(channel, corrections, correctionsPerMessage) 
 	}
 }
 
-module.exports = new LogCommand(
+const cmd = new LogCommand(
 	'corrections',
 	'Will list all corrections or corrections from a specific person. Can only be used by admins.',
 	'corrections <optional name of person>',
@@ -30,24 +30,24 @@ module.exports = new LogCommand(
 		}
 
 		const name = content;
-		let member;
+		let member: UserExistOutput | null = null;
 		if (name) {
-			member = signinHelper.doesUserExist(LogCommand.memberNameList, name);
+			member = doesUserExist(LogCommand.memberNameList, name);
 			if (!member) { // member does not exist
 				reply(message, `Sorry, I can't find "**${name}**" in the database.`);
 				return;
 			}
 		}
 
-		const correctionsData = await signinHelper.getCorrections(LogCommand.db);
+		const correctionsData = await getCorrections(LogCommand.db);
 		if (correctionsData.length === 0) {
 			message.channel.send('There are no corrections.');
 			return;
 		}
 		const corrections = correctionsData.sort((a, b) => (a.submitted.isBefore(b.submitted) ? -1 : 1));
 
-		if (name) { // send only name's messages
-			const filteredCorrections = corrections.filter((c) => c.name === member.name);
+		if (member) { // send only name's messages
+			const filteredCorrections = corrections.filter((c) => c.name === member?.name);
 			if (filteredCorrections.length) {
 				sendCorrectionsInMessages(message.channel, filteredCorrections, 3);
 			} else {
@@ -59,4 +59,6 @@ module.exports = new LogCommand(
 	},
 );
 
-module.exports.hideFromHelp();
+cmd.hideFromHelp();
+
+export default cmd;

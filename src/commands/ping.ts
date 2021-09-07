@@ -1,12 +1,12 @@
-const discord = require('discord.js');
-const Command = require('../command');
+import { MessageEmbed } from 'discord.js';
+import Command from '../command';
 
-module.exports = new Command(
+export default new Command(
 	'ping',
 	"Shows the bot's ping response time.",
 	'ping',
 	'ping',
-	(message) => {
+	async (message) => {
 		const ping = Math.round(Command.bot.ws.ping); // in ms
 
 		let color = 0xF62828; // red: high ping
@@ -16,7 +16,7 @@ module.exports = new Command(
 			color = 0xBDC304; // yellow: ok ping
 		}
 
-		const embed = new discord.MessageEmbed()
+		const embed = new MessageEmbed()
 			.setColor(color)
 			.setDescription(`${ping} ms`);
 		message.channel.send({ embeds: [embed] });

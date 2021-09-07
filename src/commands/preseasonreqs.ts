@@ -1,9 +1,9 @@
-const discord = require('discord.js');
-const LogCommand = require('../logcommand');
-const signinHelper = require('../util/signinHelper');
-const { config, send, getAuthorNickname, isAuthorAdmin } = require('../util/util');
+import { MessageEmbed, Snowflake, TextBasedChannels, User } from 'discord.js';
+import LogCommand from '../logcommand';
+import { doesUserExist, findUserFromDiscordId } from '../util/signinHelper';
+import { config, send, getAuthorNickname, isAuthorAdmin } from '../util/util';
 
-async function sendReqs(memberName, channel, sendFullData = false) {
+async function sendReqs(memberName: string, channel: TextBasedChannels | User, sendFullData = false) {
 	const reqs = (await LogCommand.db.ref(`members/${memberName}/requirements`).once('value')).val();
 	if (!reqs) {
 		send(channel, `${memberName} has not done the survey. Find it at https://spartabots.org/survey`);
@@ -13,7 +13,7 @@ async function sendReqs(memberName, channel, sendFullData = false) {
 	const numReqs = Object.keys(reqs).length;
 	const metReqs = (numReqsMet === numReqs);
 
-	const embed = new discord.MessageEmbed().setColor(metReqs ? 0x04C30E : 0xF62828);
+	const embed = new MessageEmbed().setColor(metReqs ? 0x04C30E : 0xF62828);
 
 	if (metReqs) {
 		embed.setDescription(`${memberName} has met all the requirements!`);
@@ -29,12 +29,16 @@ async function sendReqs(memberName, channel, sendFullData = false) {
 	channel.send({ embeds: [embed] });
 }
 
-module.exports = new LogCommand(
+export default new LogCommand(
 	'preseasonreqs',
 	'Will tell you whether you met your preseason requirements.',
 	'preseasonreqs <optional name of person>',
 	'preseasonreqs',
 	async (message, args) => {
+		if (!('name' in message.channel) || !message.guild || !message.member) {
+			return;
+		}
+
 		if (message.channel.name !== 'spam' && message.channel.id !== config.get('debug_channel_id')) {
 			const spamChannel = await message.guild.channels.cache.find((c) => c.name === 'spam');
 			if (spamChannel) {
@@ -42,11 +46,11 @@ module.exports = new LogCommand(
 			}
 		}
 
-		if (message.member.roles.cache.has(config.get('new_member_role'))) {
+		if (message.member.roles.cache.has(config.get('new_member_role') as Snowflake)) {
 			message.reply(':detective: You have the new member role, which means we don\'t know your name. Change your nickname and talk to a board member to be added to the sign in.');
 			return;
 		}
-		if (message.member.roles.cache.has(config.get('other_team_role'))) {
+		if (message.member.roles.cache.has(config.get('other_team_role') as Snowflake)) {
 			message.reply(':disguised_face: Only members of our team can use this command.');
 			return;
 		}
@@ -59,7 +63,7 @@ module.exports = new LogCommand(
 
 		if (content) { // argument is specified
 			if ((/^[A-zÀ-ÿ-]+ [A-zÀ-ÿ-]+.*$/).test(content)) { // argument is a name
-				const user = signinHelper.doesUserExist(LogCommand.memberNameList, content);
+				const user = doesUserExist(LogCommand.memberNameList, content);
 				if (user) { // user exists
 					if (isAuthorAdmin(message)) { // admin, so send full data
 						sendReqs(user.name, message.channel, true);
@@ -73,7 +77,7 @@ module.exports = new LogCommand(
 				send(message.channel, `"${content}" should be a full name properly spelled.`);
 			}
 		} else { // no argument, default to user's own name
-			const user = signinHelper.findUserFromDiscordId(LogCommand.memberNameList, message.author.id);
+			const user = findUserFromDiscordId(LogCommand.memberNameList, message.author.id);
 			if (user) { // user is in the database
 				sendReqs(user.name, message.author, true).then(() => {
 					message.channel.send('Check your DMs. I sent you your requirements.');

@@ -1,14 +1,16 @@
-const Command = require('../command');
+import Command from '../command';
 
-module.exports = new Command(
+const cmd = new Command(
 	'repeat',
 	'Will repeat your message then delete your message.',
 	'repeat <text>',
 	'repeat I am a good bot',
-	(message, content) => {
+	async (message, content) => {
 		message.delete();
 		message.channel.send(content);
 	},
 );
 
-module.exports.hideFromHelp();
+cmd.hideFromHelp();
+
+export default cmd;

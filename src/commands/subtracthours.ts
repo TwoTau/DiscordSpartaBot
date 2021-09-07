@@ -1,11 +1,11 @@
-const axios = require('axios');
-const moment = require('moment');
-const Command = require('../command');
-const LogCommand = require('../logcommand');
-const signinHelper = require('../util/signinHelper');
-const { config, send, reply, isAuthorAdmin, getAuthorNickname } = require('../util/util');
+import axios from 'axios';
+import * as moment from 'moment';
+import Command from '../command';
+import LogCommand from '../logcommand';
+import { doesUserExist } from '../util/signinHelper';
+import { config, send, reply, isAuthorAdmin, getAuthorNickname } from '../util/util';
 
-module.exports = new LogCommand(
+const cmd = new LogCommand(
 	'subtracthours',
 	'Will subtract specified time from the person chosen. Can only be used by build leads. Subtract 0:00 hours to override the previous subtraction.',
 	'subtracthours "<name of person>" "<time in h:mm format (has to be between 0:01 and 23:59>" "<optional date in M/D format>"',
@@ -21,7 +21,7 @@ module.exports = new LogCommand(
 			const name = argumentList[0];
 			let hoursToSubtract = argumentList[1];
 
-			const user = signinHelper.doesUserExist(LogCommand.memberNameList, name);
+			const user = doesUserExist(LogCommand.memberNameList, name);
 			if (user) { // user exists
 				const timeToSubtract = hoursToSubtract.split(':');
 				const minutesToSubtract = (+timeToSubtract[0] * 60) + (+timeToSubtract[1]);
@@ -44,19 +44,21 @@ module.exports = new LogCommand(
 					// All the parameters are correct
 
 					if (minutesToSubtract === 0) {
-						hoursToSubtract = null;
+						hoursToSubtract = '';
 					}
 
 					// subtract hours from the Firebase sign-in database
-					const updates = {};
-					updates[date.format('YY-MM-DD')] = hoursToSubtract;
+					const updates: {
+						[date: string]: number | null
+					} = {};
+					updates[date.format('YY-MM-DD')] = +hoursToSubtract || null;
 					const removalMessage = `**${await getAuthorNickname(message)}** removed ${hoursToSubtract} (=${minutesToSubtract} minutes) from **${user.name}** for the date ${date.format('MMM D')}.`;
 					LogCommand.db.ref(`log/${user.name}/subtract`).update(updates, () => {
 						send(message.channel, removalMessage);
 					});
 
 					// send data to the subtracthours Discord webhook
-					axios.post(config.get('hours_log_webhook_url'), {
+					axios.post(config.get('hours_log_webhook_url') as string, {
 						content: removalMessage,
 					}).catch((error) => {
 						if (error.response) {
@@ -78,4 +80,6 @@ module.exports = new LogCommand(
 	},
 );
 
-module.exports.hideFromHelp();
+cmd.hideFromHelp();
+
+export default cmd;

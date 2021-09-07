@@ -5,9 +5,15 @@
         "node": true
         // "es2020": true
     },
-    "parser": "babel-eslint",
+    "parser": "@typescript-eslint/parser",
+    "plugins": [
+        "@typescript-eslint"
+    ],
     "extends": [
-        "airbnb-base"
+        "airbnb-base",
+        "eslint:recommended",
+        "plugin:import/typescript",
+        "plugin:@typescript-eslint/recommended"
     ],
     "globals": {
         "Atomics": "readonly",
@@ -17,6 +23,16 @@
         "ecmaVersion": 2020
     },
     "rules": {
+        "import/extensions": [
+            "error",
+            "ignorePackages",
+            {
+                "js": "never",
+                "jsx": "never",
+                "ts": "never",
+                "tsx": "never"
+            }
+        ],
         "indent": [
             "error",
             "tab"

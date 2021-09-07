@@ -1,6 +1,5 @@
 node_modules
-
-config.json
-serviceAccountKey.json
-
 .idea/
+build/
+src/config.json
+src/serviceAccountKey.json

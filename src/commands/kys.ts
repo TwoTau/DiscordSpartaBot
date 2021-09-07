@@ -1,7 +1,7 @@
-const Command = require('../command');
-const { isAuthorBotCreator } = require('../util/util');
+import Command from '../command';
+import { isAuthorBotCreator } from '../util/util';
 
-module.exports = new Command(
+const cmd = new Command(
 	'kys',
 	'Restarts this program. Can only be used by the bot creator.',
 	'kys',
@@ -22,4 +22,6 @@ module.exports = new Command(
 	},
 );
 
-module.exports.hideFromHelp();
+cmd.hideFromHelp();
+
+export default cmd;

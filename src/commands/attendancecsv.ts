@@ -1,16 +1,16 @@
-const fs = require('fs');
-const Command = require('../command');
-const LogCommand = require('../logcommand');
-const signinHelper = require('../util/signinHelper');
-const { send, config, isAuthorAdmin } = require('../util/util');
+import { writeFile } from 'fs';
+import Command from '../command';
+import LogCommand from '../logcommand';
+import { getTimeLog } from '../util/signinHelper';
+import { send, config, isAuthorAdmin } from '../util/util';
 
-module.exports = new LogCommand(
+const cmd = new LogCommand(
 	'attendancecsv',
 	'Will send a CSV of all the hours in the format `name,seconds`. If no argument, outputs as a Discord message. Only admins can use this command.',
 	'attendancecsv <optional argument yes>',
 	'attendancecsv yes',
 	async (message, content) => {
-		if (!config.get('options.enable_log_command')) {
+		if (!(config.get('options.enable_log_command') as boolean)) {
 			message.channel.send('Everyone\'s hours have been reset to 0.');
 			return;
 		}
@@ -34,7 +34,7 @@ module.exports = new LogCommand(
 			};
 
 			if (memberLog?.meetings) {
-				const log = signinHelper.getTimeLog(memberLog.meetings,
+				const log = getTimeLog(memberLog.meetings,
 					memberLog.subtract, false);
 				logObject.time = log.totalTime;
 				logObject.formattedTime = log.formattedTime;
@@ -49,7 +49,7 @@ module.exports = new LogCommand(
 			const FILE_NAME = 'attendance.csv';
 			const FILE_CONTENTS = `Name,Seconds\n${csv}`;
 
-			fs.writeFile(FILE_NAME, FILE_CONTENTS, (err) => {
+			writeFile(FILE_NAME, FILE_CONTENTS, (err) => {
 				if (err) {
 					Command.debug(`Error creating file ${FILE_NAME}: ${err}`);
 					message.channel.send('Sorry, there was an error creating the file.');
@@ -68,4 +68,6 @@ module.exports = new LogCommand(
 	},
 );
 
-module.exports.hideFromHelp();
+cmd.hideFromHelp();
+
+export default cmd;
