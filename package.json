@@ -22,7 +22,7 @@
 	"dependencies": {
 		"axios": "^0.21.1",
 		"discord.js": "^13.1.0",
-		"firebase-admin": "^9.11.1",
+		"firebase-admin": "^11.4.1",
 		"moment": "^2.29.1",
 		"source-map-support": "^0.5.19",
 		"string-similarity": "^4.0.4"
